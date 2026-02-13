@@ -1,257 +1,111 @@
 package me.d4vide106.maintenance.config;
 
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * Main configuration manager for Maintenance Universal.
- * <p>
- * Handles loading, saving, and accessing configuration values.
- * Uses Configurate for robust YAML parsing with comments preservation.
- * </p>
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
+ * Configuration manager for MaintenanceUniversal.
  */
 public class MaintenanceConfig {
     
     private final Path configPath;
-    private YamlConfigurationLoader loader;
-    private ConfigurationNode root;
+    private CommentedConfigurationNode root;
     
-    public MaintenanceConfig(@NotNull Path dataFolder) {
+    public MaintenanceConfig(@NotNull Path dataFolder) throws IOException {
+        Files.createDirectories(dataFolder);
         this.configPath = dataFolder.resolve("config.yml");
     }
     
     /**
      * Loads or creates the configuration file.
-     * 
-     * @throws IOException if file operations fail
      */
     public void load() throws IOException {
-        // Create data folder if not exists
-        if (!Files.exists(configPath.getParent())) {
-            Files.createDirectories(configPath.getParent());
-        }
-        
-        // Create default config if not exists
         if (!Files.exists(configPath)) {
-            createDefaultConfig();
+            createDefault();
         }
         
-        loader = YamlConfigurationLoader.builder()
+        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
             .path(configPath)
             .build();
         
         root = loader.load();
     }
     
-    /**
-     * Saves the current configuration to disk.
-     */
-    public void save() throws IOException {
-        loader.save(root);
-    }
-    
-    /**
-     * Reloads the configuration from disk.
-     */
-    public void reload() throws IOException {
-        root = loader.load();
-    }
-    
-    /**
-     * Creates the default configuration file.
-     */
-    private void createDefaultConfig() throws IOException {
-        loader = YamlConfigurationLoader.builder()
-            .path(configPath)
-            .build();
+    private void createDefault() throws IOException {
+        // Create default config content
+        StringBuilder sb = new StringBuilder();
+        sb.append("# MaintenanceUniversal Configuration\n");
+        sb.append("# Version: 1.0.0\n\n");
         
-        root = loader.createNode();
+        sb.append("database:\n");
+        sb.append("  type: 'sqlite'  # sqlite, mysql, postgresql\n");
+        sb.append("  host: 'localhost'\n");
+        sb.append("  port: 3306\n");
+        sb.append("  database: 'maintenance'\n");
+        sb.append("  username: 'root'\n");
+        sb.append("  password: 'password'\n");
+        sb.append("  pool-size: 10\n");
+        sb.append("  table-prefix: 'maintenance_'\n\n");
         
-        // General settings
-        root.node("settings", "enabled").set(false).comment("Enable maintenance mode on startup");
-        root.node("settings", "mode").set("GLOBAL").comment("Mode: GLOBAL, SERVER_SPECIFIC, SCHEDULED, EMERGENCY");
-        root.node("settings", "kick-on-enable").set(true).comment("Kick non-whitelisted players when enabling");
-        root.node("settings", "update-checker").set(true).comment("Check for plugin updates");
-        root.node("settings", "debug").set(false).comment("Enable debug logging");
+        sb.append("redis:\n");
+        sb.append("  enabled: false\n");
+        sb.append("  host: 'localhost'\n");
+        sb.append("  port: 6379\n");
+        sb.append("  password: ''\n");
+        sb.append("  database: 0\n");
+        sb.append("  channel: 'maintenance'\n\n");
         
-        // Messages
-        root.node("messages", "kick-message").set(
-            "<gradient:red:dark_red><bold>⚠ MAINTENANCE MODE ⚠</bold></gradient>\n" +
-            "<gray>The server is currently undergoing maintenance.</gray>\n" +
-            "<yellow>Please try again later!</yellow>"
-        );
+        sb.append("maintenance:\n");
+        sb.append("  kick-on-enable: true\n");
+        sb.append("  kick-delay: 5  # seconds\n");
+        sb.append("  kick-message: '&cServer is under maintenance!'\n\n");
         
-        root.node("messages", "join-deny").set(
-            "<red>The server is in maintenance mode!</red>\n" +
-            "<gray>You do not have permission to join.</gray>"
-        );
+        sb.append("  motd:\n");
+        sb.append("    enabled: true\n");
+        sb.append("    text: '&c&lMaintenance Mode'\n");
         
-        root.node("messages", "motd-line1").set("<gradient:red:yellow>⚠ MAINTENANCE MODE ⚠</gradient>");
-        root.node("messages", "motd-line2").set("<gray>Server is currently offline for maintenance</gray>");
+        sb.append("  version:\n");
+        sb.append("    enabled: false\n");
+        sb.append("    text: 'Maintenance'\n");
         
-        root.node("messages", "maintenance-enabled").set("<green>Maintenance mode has been enabled!</green>");
-        root.node("messages", "maintenance-disabled").set("<green>Maintenance mode has been disabled!</green>");
+        sb.append("  max-players:\n");
+        sb.append("    enabled: false\n");
+        sb.append("    value: 0\n");
         
-        root.node("messages", "timer-warning").set(
-            "<gold><bold>MAINTENANCE NOTICE</bold></gold>\n" +
-            "<yellow>Maintenance will begin in {time}</yellow>\n" +
-            "<gray>Please finish your activities and logout safely.</gray>"
-        );
+        sb.append("  icon:\n");
+        sb.append("    enabled: false\n\n");
         
-        root.node("messages", "timer-started").set("<red>Maintenance has started! Kicked: {count} players</red>");
+        sb.append("  bypass-join-message: '&a&lYou have bypass permission!'\n\n");
         
-        // Whitelist settings
-        root.node("whitelist", "permission-bypass").set(true).comment("Allow bypass with permission");
-        root.node("whitelist", "bypass-permission").set("maintenance.bypass");
-        root.node("whitelist", "clear-on-disable").set(false).comment("Clear whitelist when disabling maintenance");
+        sb.append("timer:\n");
+        sb.append("  warnings: [300, 180, 60, 30, 10]  # seconds before start\n");
+        sb.append("  warning-message: '&eMaintenance starts in {time}!'\n");
+        sb.append("  title:\n");
+        sb.append("    enabled: true\n");
+        sb.append("    text: '&c&lMaintenance'\n");
+        sb.append("    subtitle: '&eStarts in {time}'\n");
+        sb.append("  sound:\n");
+        sb.append("    enabled: true\n");
+        sb.append("    type: 'BLOCK_NOTE_BLOCK_PLING'\n");
+        sb.append("    volume: 1.0\n");
+        sb.append("    pitch: 1.0\n\n");
         
-        // Timer settings
-        root.node("timer", "warning-intervals").setList(Integer.class, List.of(600, 300, 180, 60, 30, 10));
-        root.node("timer", "warning-intervals").comment("Warning intervals in seconds before maintenance starts");
+        sb.append("bstats:\n");
+        sb.append("  enabled: true\n");
         
-        root.node("timer", "enable-countdown").set(true);
-        root.node("timer", "countdown-action-bar").set(true).comment("Show countdown in action bar");
-        
-        // Database settings
-        root.node("database", "type").set("SQLITE").comment("Database type: SQLITE, MYSQL, MARIADB");
-        root.node("database", "host").set("localhost");
-        root.node("database", "port").set(3306);
-        root.node("database", "database").set("maintenance");
-        root.node("database", "username").set("root");
-        root.node("database", "password").set("password");
-        root.node("database", "pool-size").set(10);
-        
-        // Redis settings (for multi-server sync)
-        root.node("redis", "enabled").set(false).comment("Enable Redis for multi-server synchronization");
-        root.node("redis", "host").set("localhost");
-        root.node("redis", "port").set(6379);
-        root.node("redis", "password").set("");
-        root.node("redis", "database").set(0);
-        root.node("redis", "channel").set("maintenance");
-        
-        // Server list (MOTD) settings
-        root.node("server-list", "enabled").set(true).comment("Modify server list during maintenance");
-        root.node("server-list", "show-version").set(true);
-        root.node("server-list", "version-text").set("§c⚠ MAINTENANCE ⚠");
-        root.node("server-list", "show-players").set(true);
-        root.node("server-list", "max-players").set(0);
-        root.node("server-list", "player-count").set(0);
-        root.node("server-list", "custom-icon").set(false);
-        root.node("server-list", "icon-path").set("maintenance-icon.png");
-        
-        // Discord webhook
-        root.node("discord", "enabled").set(false);
-        root.node("discord", "webhook-url").set("");
-        root.node("discord", "notify-enable").set(true);
-        root.node("discord", "notify-disable").set(true);
-        root.node("discord", "notify-scheduled").set(true);
-        root.node("discord", "embed-color").set("#FF5555");
-        root.node("discord", "footer-text").set("Maintenance Universal by D4vide106");
-        
-        // Statistics
-        root.node("statistics", "enabled").set(true).comment("Track maintenance statistics");
-        root.node("statistics", "bstats").set(true).comment("Send anonymous usage data to bStats");
-        
-        loader.save(root);
+        Files.writeString(configPath, sb.toString());
     }
     
-    // ============================================
-    // GETTERS
-    // ============================================
-    
-    public boolean isEnabledOnStartup() {
-        return root.node("settings", "enabled").getBoolean(false);
-    }
-    
-    public String getMode() {
-        return root.node("settings", "mode").getString("GLOBAL");
-    }
-    
-    public boolean isKickOnEnable() {
-        return root.node("settings", "kick-on-enable").getBoolean(true);
-    }
-    
-    public boolean isUpdateChecker() {
-        return root.node("settings", "update-checker").getBoolean(true);
-    }
-    
-    public boolean isDebug() {
-        return root.node("settings", "debug").getBoolean(false);
-    }
-    
-    public String getKickMessage() {
-        return root.node("messages", "kick-message").getString("");
-    }
-    
-    public String getJoinDenyMessage() {
-        return root.node("messages", "join-deny").getString("");
-    }
-    
-    public String getMOTDLine1() {
-        return root.node("messages", "motd-line1").getString("");
-    }
-    
-    public String getMOTDLine2() {
-        return root.node("messages", "motd-line2").getString("");
-    }
-    
-    public String getMaintenanceEnabledMessage() {
-        return root.node("messages", "maintenance-enabled").getString("");
-    }
-    
-    public String getMaintenanceDisabledMessage() {
-        return root.node("messages", "maintenance-disabled").getString("");
-    }
-    
-    public String getTimerWarningMessage() {
-        return root.node("messages", "timer-warning").getString("");
-    }
-    
-    public String getTimerStartedMessage() {
-        return root.node("messages", "timer-started").getString("");
-    }
-    
-    public boolean isPermissionBypass() {
-        return root.node("whitelist", "permission-bypass").getBoolean(true);
-    }
-    
-    public String getBypassPermission() {
-        return root.node("whitelist", "bypass-permission").getString("maintenance.bypass");
-    }
-    
-    public boolean isClearWhitelistOnDisable() {
-        return root.node("whitelist", "clear-on-disable").getBoolean(false);
-    }
-    
-    public List<Integer> getWarningIntervals() {
-        try {
-            return root.node("timer", "warning-intervals").getList(Integer.class, new ArrayList<>());
-        } catch (Exception e) {
-            return List.of(600, 300, 180, 60, 30, 10);
-        }
-    }
-    
-    public boolean isCountdownEnabled() {
-        return root.node("timer", "enable-countdown").getBoolean(true);
-    }
-    
-    public boolean isCountdownActionBar() {
-        return root.node("timer", "countdown-action-bar").getBoolean(true);
-    }
-    
+    // Database
     public String getDatabaseType() {
-        return root.node("database", "type").getString("SQLITE");
+        return root.node("database", "type").getString("sqlite");
     }
     
     public String getDatabaseHost() {
@@ -278,6 +132,11 @@ public class MaintenanceConfig {
         return root.node("database", "pool-size").getInt(10);
     }
     
+    public String getDatabaseTablePrefix() {
+        return root.node("database", "table-prefix").getString("maintenance_");
+    }
+    
+    // Redis
     public boolean isRedisEnabled() {
         return root.node("redis", "enabled").getBoolean(false);
     }
@@ -302,39 +161,96 @@ public class MaintenanceConfig {
         return root.node("redis", "channel").getString("maintenance");
     }
     
-    public boolean isServerListEnabled() {
-        return root.node("server-list", "enabled").getBoolean(true);
+    // Maintenance
+    public boolean shouldKickOnEnable() {
+        return root.node("maintenance", "kick-on-enable").getBoolean(true);
     }
     
-    public boolean isShowVersion() {
-        return root.node("server-list", "show-version").getBoolean(true);
+    public int getKickDelay() {
+        return root.node("maintenance", "kick-delay").getInt(5);
     }
     
-    public String getVersionText() {
-        return root.node("server-list", "version-text").getString("§c⚠ MAINTENANCE ⚠");
+    public String getKickMessage() {
+        return root.node("maintenance", "kick-message").getString("&cServer is under maintenance!");
     }
     
-    public boolean isDiscordEnabled() {
-        return root.node("discord", "enabled").getBoolean(false);
+    // MOTD
+    public boolean isCustomMOTDEnabled() {
+        return root.node("maintenance", "motd", "enabled").getBoolean(true);
     }
     
-    public String getDiscordWebhookUrl() {
-        return root.node("discord", "webhook-url").getString("");
+    public String getMaintenanceMOTD() {
+        return root.node("maintenance", "motd", "text").getString("&c&lMaintenance Mode");
     }
     
-    public boolean isDiscordNotifyEnable() {
-        return root.node("discord", "notify-enable").getBoolean(true);
+    // Version
+    public boolean isCustomVersionEnabled() {
+        return root.node("maintenance", "version", "enabled").getBoolean(false);
     }
     
-    public boolean isDiscordNotifyDisable() {
-        return root.node("discord", "notify-disable").getBoolean(true);
+    public String getMaintenanceVersionText() {
+        return root.node("maintenance", "version", "text").getString("Maintenance");
     }
     
-    public boolean isStatisticsEnabled() {
-        return root.node("statistics", "enabled").getBoolean(true);
+    // Max Players
+    public boolean isCustomMaxPlayersEnabled() {
+        return root.node("maintenance", "max-players", "enabled").getBoolean(false);
     }
     
+    public int getMaintenanceMaxPlayers() {
+        return root.node("maintenance", "max-players", "value").getInt(0);
+    }
+    
+    // Icon
+    public boolean isCustomIconEnabled() {
+        return root.node("maintenance", "icon", "enabled").getBoolean(false);
+    }
+    
+    // Bypass
+    public String getBypassJoinMessage() {
+        return root.node("maintenance", "bypass-join-message").getString("&a&lYou have bypass permission!");
+    }
+    
+    // Timer
+    public int[] getWarningIntervals() {
+        List<?> list = root.node("timer", "warnings").getList(Object.class, Arrays.asList(300, 180, 60, 30, 10));
+        return list.stream().mapToInt(o -> ((Number)o).intValue()).toArray();
+    }
+    
+    public String getWarningMessage() {
+        return root.node("timer", "warning-message").getString("&eMaintenance starts in {time}!");
+    }
+    
+    public boolean isTitleEnabled() {
+        return root.node("timer", "title", "enabled").getBoolean(true);
+    }
+    
+    public String getTitleText() {
+        return root.node("timer", "title", "text").getString("&c&lMaintenance");
+    }
+    
+    public String getSubtitleText() {
+        return root.node("timer", "title", "subtitle").getString("&eStarts in {time}");
+    }
+    
+    public boolean isSoundEnabled() {
+        return root.node("timer", "sound", "enabled").getBoolean(true);
+    }
+    
+    public String getSoundType() {
+        return root.node("timer", "sound", "type").getString("BLOCK_NOTE_BLOCK_PLING");
+    }
+    
+    public float getSoundVolume() {
+        return root.node("timer", "sound", "volume").getFloat(1.0f);
+    }
+    
+    public float getSoundPitch() {
+        return root.node("timer", "sound", "pitch").getFloat(1.0f);
+    }
+    
+    // bStats
     public boolean isBStatsEnabled() {
-        return root.node("statistics", "bstats").getBoolean(true);
+        return root.node("bstats", "enabled").getBoolean(true);
     }
 }
