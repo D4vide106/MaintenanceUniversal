@@ -143,16 +143,3 @@ tasks.register("buildAll") {
         println("=" .repeat(50))
     }
 }
-
-tasks.register("clean") {
-    group = "build"
-    description = "Cleans all build directories"
-    
-    doLast {
-        delete(buildDir)
-        subprojects.forEach {
-            delete(it.buildDir)
-        }
-        println("✅ All build directories cleaned!")
-    }
-}
