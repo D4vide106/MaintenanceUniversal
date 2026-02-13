@@ -222,7 +222,7 @@ public class MaintenanceCommand extends Command implements TabExecutor {
     
     private void handleReload(CommandSender sender) {
         try {
-            plugin.getConfig().reload();
+            plugin.getMaintenanceConfig().reload();
             sender.sendMessage(new TextComponent(ChatColor.GREEN + "✓ Configuration reloaded"));
         } catch (Exception e) {
             sender.sendMessage(new TextComponent(ChatColor.RED + "✗ Failed to reload configuration"));
