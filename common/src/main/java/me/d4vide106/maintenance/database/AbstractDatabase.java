@@ -259,7 +259,7 @@ public abstract class AbstractDatabase implements DatabaseProvider {
         });
     }
     
-    // Statistics
+    // Statistics - Using simplified constructor (4 params)
     
     @Override
     public @NotNull CompletableFuture<MaintenanceStats> getStats() {
@@ -271,14 +271,11 @@ public abstract class AbstractDatabase implements DatabaseProvider {
                     return new MaintenanceStats(
                         rs.getInt("total_sessions"),
                         Duration.ofMillis(rs.getLong("total_duration")),
-                        rs.getLong("last_started"),
-                        rs.getLong("last_ended"),
-                        rs.getInt("current_whitelisted"),
                         rs.getInt("players_kicked"),
                         rs.getInt("connections_blocked")
                     );
                 }
-                return new MaintenanceStats(0, Duration.ZERO, 0, 0, 0, 0, 0);
+                return new MaintenanceStats(0, Duration.ZERO, 0, 0);
             }
         });
     }
