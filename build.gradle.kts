@@ -11,6 +11,9 @@ allprojects {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://oss.sonatype.org/content/repositories/snapshots")
+        maven("https://maven.fabricmc.net/")
+        maven("https://maven.minecraftforge.net/")
+        maven("https://maven.neoforged.net/releases/")
     }
 }
 
@@ -34,7 +37,7 @@ subprojects {
 // ============================================
 tasks.register("buildUniversal") {
     group = "build"
-    description = "Builds the Universal JAR (works on ALL platforms)"
+    description = "Builds the Universal JAR (works on ALL plugin platforms)"
     
     dependsOn(":universal:shadowJar")
     
@@ -44,62 +47,93 @@ tasks.register("buildUniversal") {
         println("  ✅ Universal JAR Built!")
         println("════════════════════════════════════════════════════════════")
         println("")
-        println("  🌐 Universal JAR (ALL platforms):")
+        println("  🌐 Universal Plugin JAR:")
         println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
-        println("")
-        println("  ✅ Works on:")
-        println("     - Paper 1.13+")
-        println("     - Spigot 1.13+")
-        println("     - Purpur 1.13+")
-        println("     - Folia 1.19.4+")
-        println("     - Velocity 3.0+")
-        println("     - BungeeCord (latest)")
-        println("     - Waterfall (all versions)")
-        println("")
-        println("  💡 Auto-detects platform and loads correct implementation!")
+        println("     ✅ Paper + Spigot + Purpur + Folia + Velocity + BungeeCord + Waterfall")
         println("")
         println("════════════════════════════════════════════════════════════")
     }
 }
 
 // ============================================
-// TASK: buildAll - ALL JARs (Universal + Singles)
+// TASK: buildMods - Mod JARs (Fabric + Forge)
 // ============================================
-tasks.register("buildAll") {
+tasks.register("buildMods") {
     group = "build"
-    description = "Builds Universal JAR + all individual platform JARs"
+    description = "Builds mod JARs (Fabric + Forge/NeoForge)"
     
     dependsOn(
-        ":universal:shadowJar",
+        ":fabric:remapJar",
+        ":forge:shadowJar"
+    )
+    
+    doLast {
+        println("✅ Fabric JAR: fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+        println("✅ Forge JAR: forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+    }
+}
+
+// ============================================
+// TASK: buildPlugins - Plugin JARs
+// ============================================
+tasks.register("buildPlugins") {
+    group = "build"
+    description = "Builds all plugin JARs (Paper + Velocity + BungeeCord)"
+    
+    dependsOn(
         ":paper:shadowJar",
         ":velocity:shadowJar",
         ":bungee:shadowJar"
     )
     
     doLast {
+        println("✅ Paper JAR: paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
+        println("✅ Velocity JAR: velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
+        println("✅ BungeeCord JAR: bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
+    }
+}
+
+// ============================================
+// TASK: buildAll - EVERYTHING
+// ============================================
+tasks.register("buildAll") {
+    group = "build"
+    description = "Builds ALL JARs (Universal + Plugins + Mods)"
+    
+    dependsOn(
+        ":universal:shadowJar",
+        ":paper:shadowJar",
+        ":velocity:shadowJar",
+        ":bungee:shadowJar",
+        ":fabric:remapJar",
+        ":forge:shadowJar"
+    )
+    
+    doLast {
         println("")
         println("════════════════════════════════════════════════════════════")
-        println("  ✅ All JARs Built!")
+        println("  ✅ ALL JARs Built Successfully!")
         println("════════════════════════════════════════════════════════════")
         println("")
-        println("  🌐 Universal JAR (Recommended):")
+        println("  🌐 UNIVERSAL JAR (⭐ Recommended):")
         println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
-        println("     ✅ Auto-detects: Paper, Spigot, Purpur, Folia, Velocity, BungeeCord, Waterfall")
+        println("     ✅ Paper, Spigot, Purpur, Folia, Velocity, BungeeCord, Waterfall")
         println("")
-        println("  📐 Individual Server JAR:")
+        println("  📐 PLUGIN JARs (Individual):")
         println("     paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
-        println("     ✅ Paper + Spigot + Purpur + Folia + CraftBukkit")
-        println("")
-        println("  🌐 Individual Proxy JARs:")
         println("     velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
-        println("     ✅ Velocity 3.0+")
-        println("")
         println("     bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
-        println("     ✅ BungeeCord + Waterfall")
+        println("")
+        println("  🧩 MOD JARs (Modded Minecraft):")
+        println("     fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+        println("     ✅ Fabric + Quilt")
+        println("")
+        println("     forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+        println("     ✅ Forge + NeoForge")
         println("")
         println("════════════════════════════════════════════════════════════")
         println("")
-        println("  💡 Use Universal JAR for simplicity, or individual JARs for smaller size!")
+        println("  💡 Use Universal JAR for plugins or individual mod JARs for modded!")
         println("")
     }
 }
@@ -113,7 +147,7 @@ tasks.register("buildServer") {
     dependsOn(":paper:shadowJar")
     
     doLast {
-        println("✅ Server JAR ready: paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
+        println("✅ Server JAR: paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
     }
 }
 
@@ -146,6 +180,8 @@ tasks.register("cleanAll") {
         ":paper:clean",
         ":velocity:clean",
         ":bungee:clean",
-        ":universal:clean"
+        ":universal:clean",
+        ":fabric:clean",
+        ":forge:clean"
     )
 }
