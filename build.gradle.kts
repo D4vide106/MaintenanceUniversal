@@ -29,12 +29,48 @@ subprojects {
     }
 }
 
-// Task per creare TUTTI i JAR
+// ============================================
+// TASK: buildUniversal - Universal JAR
+// ============================================
+tasks.register("buildUniversal") {
+    group = "build"
+    description = "Builds the Universal JAR (works on ALL platforms)"
+    
+    dependsOn(":universal:shadowJar")
+    
+    doLast {
+        println("")
+        println("════════════════════════════════════════════════════════════")
+        println("  ✅ Universal JAR Built!")
+        println("════════════════════════════════════════════════════════════")
+        println("")
+        println("  🌐 Universal JAR (ALL platforms):")
+        println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
+        println("")
+        println("  ✅ Works on:")
+        println("     - Paper 1.13+")
+        println("     - Spigot 1.13+")
+        println("     - Purpur 1.13+")
+        println("     - Folia 1.19.4+")
+        println("     - Velocity 3.0+")
+        println("     - BungeeCord (latest)")
+        println("     - Waterfall (all versions)")
+        println("")
+        println("  💡 Auto-detects platform and loads correct implementation!")
+        println("")
+        println("════════════════════════════════════════════════════════════")
+    }
+}
+
+// ============================================
+// TASK: buildAll - ALL JARs (Universal + Singles)
+// ============================================
 tasks.register("buildAll") {
     group = "build"
-    description = "Builds all platform JARs"
+    description = "Builds Universal JAR + all individual platform JARs"
     
     dependsOn(
+        ":universal:shadowJar",
         ":paper:shadowJar",
         ":velocity:shadowJar",
         ":bungee:shadowJar"
@@ -43,14 +79,18 @@ tasks.register("buildAll") {
     doLast {
         println("")
         println("════════════════════════════════════════════════════════════")
-        println("  ✅ Build Complete!")
+        println("  ✅ All JARs Built!")
         println("════════════════════════════════════════════════════════════")
         println("")
-        println("  📐 Server JAR:")
+        println("  🌐 Universal JAR (Recommended):")
+        println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
+        println("     ✅ Auto-detects: Paper, Spigot, Purpur, Folia, Velocity, BungeeCord, Waterfall")
+        println("")
+        println("  📐 Individual Server JAR:")
         println("     paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
         println("     ✅ Paper + Spigot + Purpur + Folia + CraftBukkit")
         println("")
-        println("  🌐 Proxy JARs:")
+        println("  🌐 Individual Proxy JARs:")
         println("     velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
         println("     ✅ Velocity 3.0+")
         println("")
@@ -58,10 +98,15 @@ tasks.register("buildAll") {
         println("     ✅ BungeeCord + Waterfall")
         println("")
         println("════════════════════════════════════════════════════════════")
+        println("")
+        println("  💡 Use Universal JAR for simplicity, or individual JARs for smaller size!")
+        println("")
     }
 }
 
-// Task per Server JARs
+// ============================================
+// TASK: buildServer - Server JAR only
+// ============================================
 tasks.register("buildServer") {
     group = "build"
     description = "Builds Server platform JAR (Paper)"
@@ -72,7 +117,9 @@ tasks.register("buildServer") {
     }
 }
 
-// Task per Proxy JARs
+// ============================================
+// TASK: buildProxy - Proxy JARs only
+// ============================================
 tasks.register("buildProxy") {
     group = "build"
     description = "Builds Proxy platform JARs (Velocity + BungeeCord)"
@@ -87,7 +134,9 @@ tasks.register("buildProxy") {
     }
 }
 
-// Clean all
+// ============================================
+// TASK: cleanAll - Clean all modules
+// ============================================
 tasks.register("cleanAll") {
     group = "build"
     description = "Cleans all build directories"
@@ -96,6 +145,7 @@ tasks.register("cleanAll") {
         ":common:clean",
         ":paper:clean",
         ":velocity:clean",
-        ":bungee:clean"
+        ":bungee:clean",
+        ":universal:clean"
     )
 }
