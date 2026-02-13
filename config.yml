@@ -1,0 +1,673 @@
+# ╔═══════════════════════════════════════════════════════════════════════════════════╗
+# ║                                                                                   ║
+# ║                        MAINTENANCE UNIVERSAL - CONFIG                             ║
+# ║                                                                                   ║
+# ║                          Author: D4vide106                                        ║
+# ║                          Version: 1.0.0                                           ║
+# ║                                                                                   ║
+# ║  Professional multi-platform maintenance management system                        ║
+# ║  Platforms: Paper, Velocity, Fabric, Forge                                        ║
+# ║                                                                                   ║
+# ║  Documentation: https://github.com/D4vide106/MaintenanceUniversal                 ║
+# ║  Support: https://discord.gg/your-discord                                         ║
+# ║                                                                                   ║
+# ╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# GENERAL SETTINGS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+settings:
+  # Enable maintenance mode on server startup
+  # Useful for scheduled restarts with maintenance
+  enabled-on-startup: false
+  
+  # Default maintenance mode
+  # Options: GLOBAL, SERVER_SPECIFIC, SCHEDULED, EMERGENCY
+  # - GLOBAL: Affects all servers in the network
+  # - SERVER_SPECIFIC: Only specific servers (Velocity/BungeeCord)
+  # - SCHEDULED: Maintenance with automatic start/stop timers
+  # - EMERGENCY: Priority mode for critical issues
+  default-mode: GLOBAL
+  
+  # Automatically kick non-whitelisted players when enabling maintenance
+  kick-on-enable: true
+  
+  # Kick delay in seconds (time before kicking players)
+  # Set to 0 for immediate kick
+  kick-delay: 3
+  
+  # Check for plugin updates on startup
+  update-checker: true
+  
+  # Notify admins about available updates
+  notify-updates: true
+  
+  # Enable debug logging (for troubleshooting)
+  # Warning: Creates verbose logs!
+  debug: false
+  
+  # Language file to use (supports multiple languages)
+  # Available: en_US, it_IT, es_ES, de_DE, fr_FR, pt_BR, ru_RU
+  language: en_US
+  
+  # Sync maintenance status across multiple servers via Redis
+  # Requires Redis to be configured below
+  multi-server-sync: false
+  
+  # Allow console to bypass maintenance
+  console-bypass: true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# MESSAGES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Supports MiniMessage format: https://docs.advntr.dev/minimessage/format.html
+# Examples:
+#   - <gradient:red:blue>text</gradient>
+#   - <bold><italic>text</italic></bold>
+#   - <#FF5555>custom hex color</#FF5555>
+#   - <hover:show_text:'Hover text'>hoverable</hover>
+#   - <click:run_command:'/help'>clickable</click>
+
+messages:
+  # Prefix shown before all plugin messages
+  prefix: "<gradient:gold:yellow><bold>MAINTENANCE</bold></gradient> <dark_gray>»</dark_gray> "
+  
+  # Message shown when a player is kicked due to maintenance
+  kick-message: |
+    <gradient:red:dark_red><bold>⚠ MAINTENANCE MODE ⚠</bold></gradient>
+    
+    <gray>The server is currently undergoing maintenance.</gray>
+    <gray>This is necessary to improve your experience!</gray>
+    
+    <yellow>Expected duration: <white>{duration}</white></yellow>
+    <yellow>Please try again later!</yellow>
+    
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+    <green>Follow us:</green>
+    <aqua>Discord: discord.gg/yourserver</aqua>
+    <aqua>Website: www.yourserver.com</aqua>
+  
+  # Message shown when a non-whitelisted player tries to join
+  join-deny: |
+    <red><bold>⛔ ACCESS DENIED</bold></red>
+    
+    <gray>The server is in maintenance mode.</gray>
+    <gray>You do not have permission to join during maintenance.</gray>
+    
+    <yellow>Reason: <white>{reason}</white></yellow>
+    
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+    <gold>Contact staff if you believe this is an error.</gold>
+  
+  # MOTD (Message of the Day) shown in server list
+  # Line 1
+  motd-line1: "<gradient:red:yellow>⚠ MAINTENANCE MODE ⚠</gradient>"
+  
+  # Line 2
+  motd-line2: "<gray>Server is currently offline for maintenance</gray>"
+  
+  # Alternative MOTD for scheduled maintenance (shows countdown)
+  motd-scheduled-line1: "<gradient:gold:yellow>⏰ SCHEDULED MAINTENANCE</gradient>"
+  motd-scheduled-line2: "<gray>Starting in: <yellow>{time}</yellow></gray>"
+  
+  # Message sent to admins when maintenance is enabled
+  maintenance-enabled: "<green>✓ Maintenance mode has been <bold>ENABLED</bold>!</green>"
+  
+  # Message sent to admins when maintenance is disabled
+  maintenance-disabled: "<green>✓ Maintenance mode has been <bold>DISABLED</bold>!</green>"
+  
+  # Broadcast message when maintenance is enabled
+  broadcast-enabled: |
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+    <gradient:red:dark_red><bold>⚠ MAINTENANCE MODE ENABLED ⚠</bold></gradient>
+    
+    <gray>The server is now in maintenance mode.</gray>
+    <gray>Enabled by: <yellow>{player}</yellow></gray>
+    <gray>Reason: <yellow>{reason}</yellow></gray>
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+  
+  # Broadcast message when maintenance is disabled
+  broadcast-disabled: |
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+    <gradient:green:dark_green><bold>✓ MAINTENANCE MODE DISABLED ✓</bold></gradient>
+    
+    <gray>The server is now open to all players!</gray>
+    <gray>Disabled by: <yellow>{player}</yellow></gray>
+    <gray>Duration: <yellow>{duration}</yellow></gray>
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+  
+  # Warning message before scheduled maintenance starts
+  timer-warning: |
+    <gold><bold>⏰ MAINTENANCE NOTICE</bold></gold>
+    
+    <yellow>Scheduled maintenance will begin in <white><bold>{time}</bold></white></yellow>
+    <gray>Please finish your activities and logout safely.</gray>
+    
+    <dark_gray>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</dark_gray>
+    <green>Save your progress now!</green>
+  
+  # Message when scheduled maintenance starts
+  timer-started: |
+    <red><bold>🔧 MAINTENANCE HAS STARTED!</bold></red>
+    
+    <gray>Players kicked: <yellow>{count}</yellow></gray>
+    <gray>Expected duration: <yellow>{duration}</yellow></gray>
+  
+  # Message when scheduled maintenance ends
+  timer-ended: |
+    <green><bold>✓ MAINTENANCE HAS ENDED!</bold></green>
+    
+    <gray>The server is now open to all players.</gray>
+    <gray>Thank you for your patience!</gray>
+  
+  # Action bar countdown message (shown during timer)
+  countdown-actionbar: "<gold>⏰ Maintenance in: <yellow><bold>{time}</bold></yellow></gold>"
+  
+  # Title message shown before kick
+  kick-title: "<gradient:red:dark_red><bold>MAINTENANCE</bold></gradient>"
+  kick-subtitle: "<gray>Server is going down for maintenance</gray>"
+  
+  # Whitelist messages
+  whitelist-added: "<green>✓ Added <yellow>{player}</yellow> to the maintenance whitelist!</green>"
+  whitelist-removed: "<red>✗ Removed <yellow>{player}</yellow> from the maintenance whitelist!</red>"
+  whitelist-already-added: "<red>✗ <yellow>{player}</yellow> is already whitelisted!</red>"
+  whitelist-not-found: "<red>✗ <yellow>{player}</yellow> is not in the whitelist!</red>"
+  whitelist-cleared: "<green>✓ Maintenance whitelist has been cleared!</green>"
+  
+  # Error messages
+  no-permission: "<red>✗ You don't have permission to use this command!</red>"
+  player-not-found: "<red>✗ Player <yellow>{player}</yellow> not found!</red>"
+  invalid-duration: "<red>✗ Invalid duration format! Examples: 30m, 1h, 1h30m</red>"
+  already-enabled: "<red>✗ Maintenance is already enabled!</red>"
+  already-disabled: "<red>✗ Maintenance is already disabled!</red>"
+  timer-already-active: "<red>✗ A maintenance timer is already active!</red>"
+  no-timer-active: "<red>✗ No maintenance timer is currently active!</red>"
+  command-usage: "<red>✗ Usage: {usage}</red>"
+  
+  # Success messages
+  config-reloaded: "<green>✓ Configuration reloaded successfully!</green>"
+  timer-scheduled: "<green>✓ Maintenance timer scheduled for <yellow>{time}</yellow>!</green>"
+  timer-cancelled: "<green>✓ Maintenance timer has been cancelled!</green>"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# WHITELIST SETTINGS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+whitelist:
+  # Allow players with bypass permission to join during maintenance
+  # If true, players with 'maintenance.bypass' permission can join
+  permission-bypass: true
+  
+  # Permission node for bypassing maintenance
+  bypass-permission: "maintenance.bypass"
+  
+  # Automatically clear whitelist when disabling maintenance
+  # Useful if you only want temporary whitelist entries
+  clear-on-disable: false
+  
+  # Save whitelist to database (persists across restarts)
+  # If false, whitelist is only stored in memory
+  persistent: true
+  
+  # Maximum whitelist size (0 = unlimited)
+  max-size: 100
+  
+  # Allow adding offline players to whitelist
+  # If false, only online players can be added
+  allow-offline: true
+  
+  # Notify whitelisted players when they join during maintenance
+  notify-on-join: true
+  
+  # Message shown to whitelisted players on join
+  join-notification: "<gold>⚠ You are joining during maintenance mode!</gold>"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TIMER & SCHEDULING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+timer:
+  # Warning intervals in seconds before maintenance starts
+  # Players will be notified at each interval
+  # Example: 600 = 10 minutes, 300 = 5 minutes, etc.
+  warning-intervals:
+    - 600   # 10 minutes
+    - 480   # 8 minutes
+    - 300   # 5 minutes
+    - 240   # 4 minutes
+    - 180   # 3 minutes
+    - 120   # 2 minutes
+    - 60    # 1 minute
+    - 45    # 45 seconds
+    - 30    # 30 seconds
+    - 15    # 15 seconds
+    - 10    # 10 seconds
+    - 5     # 5 seconds
+    - 3     # 3 seconds
+    - 2     # 2 seconds
+    - 1     # 1 second
+  
+  # Enable countdown in chat
+  enable-countdown: true
+  
+  # Show countdown in action bar (above hotbar)
+  countdown-actionbar: true
+  
+  # Show countdown in boss bar
+  countdown-bossbar: true
+  
+  # Boss bar settings
+  bossbar:
+    # Boss bar color
+    # Options: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+    color: RED
+    
+    # Boss bar style
+    # Options: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+    style: SOLID
+    
+    # Boss bar title
+    title: "<gradient:red:yellow>⏰ Maintenance in: {time}</gradient>"
+  
+  # Play sound on each warning
+  play-sound: true
+  
+  # Sound settings
+  sound:
+    # Sound type (Minecraft sound name)
+    type: "BLOCK_NOTE_BLOCK_PLING"
+    
+    # Volume (0.0 - 1.0)
+    volume: 1.0
+    
+    # Pitch (0.5 - 2.0)
+    pitch: 1.5
+  
+  # Send title message on warnings
+  send-title: true
+  
+  # Title fade in/stay/fade out times (in ticks, 20 ticks = 1 second)
+  title-fade-in: 10
+  title-stay: 40
+  title-fade-out: 10
+  
+  # Automatically restart server after maintenance ends
+  auto-restart: false
+  
+  # Restart delay in seconds after maintenance ends
+  restart-delay: 10
+  
+  # Execute custom commands when timer starts
+  commands-on-start:
+    - "say Maintenance is starting!"
+    # - "save-all"
+  
+  # Execute custom commands when timer ends
+  commands-on-end:
+    - "say Maintenance has ended!"
+    # - "restart"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DATABASE CONFIGURATION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Stores maintenance data, whitelist, statistics, and history
+
+database:
+  # Database type
+  # Options: SQLITE, MYSQL, MARIADB, POSTGRESQL
+  # SQLite is recommended for single servers (no setup required)
+  # MySQL/MariaDB recommended for multi-server networks
+  type: SQLITE
+  
+  # SQLite settings (only used if type is SQLITE)
+  sqlite:
+    # Database file name (stored in plugin folder)
+    file: "maintenance.db"
+  
+  # MySQL/MariaDB/PostgreSQL settings
+  mysql:
+    # Database host
+    host: "localhost"
+    
+    # Database port
+    port: 3306
+    
+    # Database name
+    database: "maintenance"
+    
+    # Username
+    username: "root"
+    
+    # Password
+    password: "password"
+    
+    # Use SSL connection
+    use-ssl: false
+    
+    # Verify SSL certificate
+    verify-certificate: true
+  
+  # Connection pool settings (HikariCP)
+  pool:
+    # Maximum pool size (number of connections)
+    max-size: 10
+    
+    # Minimum idle connections
+    min-idle: 2
+    
+    # Maximum lifetime of a connection (in milliseconds)
+    max-lifetime: 1800000  # 30 minutes
+    
+    # Connection timeout (in milliseconds)
+    connection-timeout: 5000  # 5 seconds
+    
+    # Idle timeout (in milliseconds)
+    idle-timeout: 600000  # 10 minutes
+  
+  # Table prefix (useful for shared databases)
+  table-prefix: "maintenance_"
+  
+  # Automatically backup database on startup
+  auto-backup: true
+  
+  # Maximum number of backups to keep
+  max-backups: 7
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# REDIS CONFIGURATION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# For multi-server synchronization (Velocity/BungeeCord networks)
+
+redis:
+  # Enable Redis synchronization
+  # When enabled, maintenance status is synced across all servers in real-time
+  enabled: false
+  
+  # Redis server host
+  host: "localhost"
+  
+  # Redis server port
+  port: 6379
+  
+  # Redis password (leave empty if no password)
+  password: ""
+  
+  # Redis database number (0-15)
+  database: 0
+  
+  # Channel name for pub/sub communication
+  channel: "maintenance:sync"
+  
+  # Use SSL connection
+  use-ssl: false
+  
+  # Connection timeout (in milliseconds)
+  timeout: 2000
+  
+  # Connection pool settings
+  pool:
+    max-total: 16
+    max-idle: 8
+    min-idle: 2
+  
+  # Sync interval (in seconds)
+  # How often to check for changes (only as fallback)
+  sync-interval: 5
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SERVER LIST (MOTD) SETTINGS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Customize how the server appears in the multiplayer server list
+
+server-list:
+  # Enable server list modification during maintenance
+  enabled: true
+  
+  # Show custom version text
+  show-version: true
+  
+  # Custom version text (replaces server version)
+  version-text: "§c⚠ MAINTENANCE ⚠"
+  
+  # Show player count
+  show-players: true
+  
+  # Custom max players (0 = show as full)
+  max-players: 0
+  
+  # Custom online players count
+  player-count: 0
+  
+  # Show custom player count text
+  custom-player-count: true
+  
+  # Custom player count format
+  player-count-format: "§c⚠ Maintenance"
+  
+  # Use custom server icon during maintenance
+  custom-icon: false
+  
+  # Path to custom icon (PNG, 64x64 pixels)
+  # Place the file in the plugin folder
+  icon-path: "maintenance-icon.png"
+  
+  # Show hover text with additional info
+  show-hover: true
+  
+  # Hover text (list of fake players shown on hover)
+  hover-text:
+    - "§c§l⚠ MAINTENANCE MODE ⚠"
+    - ""
+    - "§7Server is currently"
+    - "§7undergoing maintenance"
+    - ""
+    - "§eExpected uptime:"
+    - "§f{duration}"
+    - ""
+    - "§aFollow us:"
+    - "§bdiscord.gg/yourserver"
+  
+  # Protocol version to send
+  # -1 = Use server version
+  # Any other number = Custom version (shows as incompatible)
+  protocol-version: -1
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DISCORD WEBHOOK INTEGRATION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Send notifications to Discord when maintenance status changes
+
+discord:
+  # Enable Discord webhook notifications
+  enabled: false
+  
+  # Discord webhook URL
+  # Create one in Discord: Server Settings > Integrations > Webhooks
+  webhook-url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  
+  # Notify when maintenance is enabled
+  notify-enable: true
+  
+  # Notify when maintenance is disabled
+  notify-disable: true
+  
+  # Notify when maintenance is scheduled
+  notify-scheduled: true
+  
+  # Notify on timer warnings
+  notify-warnings: false
+  
+  # Notify when players are added/removed from whitelist
+  notify-whitelist: false
+  
+  # Use embeds (rich formatting)
+  use-embeds: true
+  
+  # Embed settings
+  embed:
+    # Embed color (hex format)
+    color-enabled: "#FF5555"    # Red for enabled
+    color-disabled: "#55FF55"   # Green for disabled
+    color-scheduled: "#FFAA00"  # Orange for scheduled
+    color-warning: "#FFFF55"    # Yellow for warnings
+    
+    # Show thumbnail (plugin logo)
+    show-thumbnail: true
+    
+    # Thumbnail URL
+    thumbnail-url: "https://i.imgur.com/your-logo.png"
+    
+    # Show footer
+    show-footer: true
+    
+    # Footer text
+    footer-text: "Maintenance Universal by D4vide106"
+    
+    # Footer icon URL
+    footer-icon-url: "https://i.imgur.com/your-icon.png"
+    
+    # Show timestamp
+    show-timestamp: true
+    
+    # Show author (who performed the action)
+    show-author: true
+  
+  # Ping roles on notifications
+  ping-roles:
+    # Enable role pinging
+    enabled: false
+    
+    # Role IDs to ping (get from Discord: Right click role > Copy ID)
+    roles:
+      - "123456789012345678"  # Admin role
+      - "234567890123456789"  # Staff role
+  
+  # Custom webhook username
+  username: "Maintenance Bot"
+  
+  # Custom webhook avatar URL
+  avatar-url: "https://i.imgur.com/your-avatar.png"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STATISTICS & METRICS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+statistics:
+  # Enable statistics tracking
+  # Tracks: total sessions, duration, players kicked, connections blocked
+  enabled: true
+  
+  # Save statistics to database
+  save-to-database: true
+  
+  # Track individual player join attempts
+  track-join-attempts: true
+  
+  # Track maintenance session history
+  track-history: true
+  
+  # Maximum history entries to keep
+  max-history: 100
+  
+  # Enable bStats metrics (anonymous usage statistics)
+  # Helps the developer understand plugin usage
+  # View data: https://bstats.org/plugin/bukkit/MaintenanceUniversal
+  bstats: true
+  
+  # bStats plugin ID (don't change this)
+  bstats-id: 12345
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PLACEHOLDERS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Available placeholders for messages:
+#   {player}      - Player name
+#   {uuid}        - Player UUID
+#   {reason}      - Maintenance reason
+#   {duration}    - Maintenance duration
+#   {time}        - Time remaining/elapsed
+#   {count}       - Number of players kicked
+#   {server}      - Server name (for multi-server)
+#   {mode}        - Maintenance mode
+#   {date}        - Current date
+#   {timestamp}   - Unix timestamp
+
+# PlaceholderAPI support (if installed)
+placeholderapi:
+  # Enable PlaceholderAPI integration
+  enabled: true
+  
+  # Available placeholders:
+  #   %maintenance_status%          - Enabled/Disabled
+  #   %maintenance_mode%            - GLOBAL/SERVER_SPECIFIC/etc.
+  #   %maintenance_duration%        - How long it's been active
+  #   %maintenance_remaining%       - Time until it ends (scheduled)
+  #   %maintenance_whitelist_count% - Number of whitelisted players
+  #   %maintenance_is_whitelisted%  - true/false for current player
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ADVANCED SETTINGS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Only change these if you know what you're doing!
+
+advanced:
+  # Enable command aliases
+  # Allows using /mt and /maint instead of /maintenance
+  command-aliases: true
+  
+  # Tab completion for commands
+  tab-completion: true
+  
+  # Suggest similar commands on typos
+  suggest-commands: true
+  
+  # Async operations (uses separate thread pool)
+  async-operations: true
+  
+  # Thread pool size for async operations
+  thread-pool-size: 4
+  
+  # Cache settings
+  cache:
+    # Enable caching (improves performance)
+    enabled: true
+    
+    # Cache duration (in seconds)
+    duration: 60
+    
+    # Maximum cache size
+    max-size: 1000
+  
+  # Rate limiting (prevents command spam)
+  rate-limit:
+    enabled: true
+    
+    # Maximum commands per time window
+    max-commands: 5
+    
+    # Time window (in seconds)
+    time-window: 10
+  
+  # API settings
+  api:
+    # Allow external plugins to use the API
+    enabled: true
+    
+    # API version
+    version: "1.0.0"
+  
+  # Compatibility mode for older Minecraft versions
+  # Disables features not available in older versions
+  legacy-support: false
+  
+  # Legacy version (if legacy-support is true)
+  # Options: 1.7, 1.8, 1.9, 1.10, 1.11, 1.12
+  legacy-version: "1.12"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CONFIG VERSION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DO NOT CHANGE THIS! Used for automatic config updates.
+
+config-version: 1
