@@ -107,22 +107,9 @@ public interface MaintenanceAPI {
     
     /**
      * Gets remaining time until maintenance starts or ends.
+     * Returns Duration.ZERO if no timer is active.
      */
     @NotNull Duration getRemainingTime();
-    
-    // ============================================
-    // NOTIFICATIONS
-    // ============================================
-    
-    /**
-     * Broadcasts a maintenance notification.
-     */
-    void broadcastNotification(@NotNull String message);
-    
-    /**
-     * Kicks non-whitelisted players.
-     */
-    void kickNonWhitelistedPlayers();
     
     // ============================================
     // STATISTICS
