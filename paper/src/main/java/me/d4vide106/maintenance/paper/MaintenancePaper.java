@@ -48,14 +48,14 @@ public class MaintenancePaper extends JavaPlugin {
             getLogger().info("Configuration loaded successfully");
             
             // Initialize database
-            database = DatabaseFactory.create(config);
+            database = DatabaseFactory.create(config, getDataFolder().toPath());
             database.initialize().join();
             getLogger().info("Database initialized: " + config.getDatabaseType());
             
             // Initialize managers
-            maintenanceManager = new MaintenanceManager(database, null);
+            maintenanceManager = new MaintenanceManager(database);
             whitelistManager = new WhitelistManager(database);
-            timerManager = new TimerManager(database);
+            timerManager = new TimerManager();
             getLogger().info("Managers initialized");
             
             // Initialize API
