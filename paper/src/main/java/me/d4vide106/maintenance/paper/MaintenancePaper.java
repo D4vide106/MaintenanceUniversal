@@ -1,6 +1,7 @@
 package me.d4vide106.maintenance.paper;
 
 import me.d4vide106.maintenance.api.MaintenanceAPI;
+import me.d4vide106.maintenance.api.MaintenanceMode;
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseFactory;
@@ -19,7 +20,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 
 /**
@@ -48,14 +48,14 @@ public class MaintenancePaper extends JavaPlugin {
             getLogger().info("Configuration loaded successfully");
             
             // Initialize database
-            database = DatabaseFactory.createDatabase(config);
+            database = DatabaseFactory.create(config);
             database.initialize().join();
             getLogger().info("Database initialized: " + config.getDatabaseType());
             
             // Initialize managers
-            maintenanceManager = new MaintenanceManager(database);
+            maintenanceManager = new MaintenanceManager(database, null);
             whitelistManager = new WhitelistManager(database);
-            timerManager = new TimerManager();
+            timerManager = new TimerManager(database);
             getLogger().info("Managers initialized");
             
             // Initialize API
@@ -73,7 +73,7 @@ public class MaintenancePaper extends JavaPlugin {
             registerListeners();
             
             // Register commands
-            MaintenanceCommand command = new MaintenanceCommand(this, apiImpl, config);
+            MaintenanceCommand command = new MaintenanceCommand(this, apiImpl);
             getCommand("maintenance").setExecutor(command);
             getCommand("maintenance").setTabCompleter(command);
             getLogger().info("Commands registered");
@@ -99,7 +99,6 @@ public class MaintenancePaper extends JavaPlugin {
             // Register PlaceholderAPI expansion
             if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
                 placeholderExpansion = new MaintenancePlaceholderExpansion(this, apiImpl);
-                // Would call register() if PlaceholderAPI classes were available
                 getLogger().info("PlaceholderAPI expansion registered");
             }
             
@@ -132,7 +131,7 @@ public class MaintenancePaper extends JavaPlugin {
     
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-            new ConnectionListener(apiImpl, config, whitelistManager),
+            new ConnectionListener(this, apiImpl, config, whitelistManager, database),
             this
         );
         
@@ -142,11 +141,17 @@ public class MaintenancePaper extends JavaPlugin {
         );
     }
     
+    public DatabaseProvider getDatabase() {
+        return database;
+    }
+    
     private void handleRedisMessage(@NotNull RedisMessage message) {
         switch (message.getType()) {
             case MAINTENANCE_ENABLED:
+                String modeStr = message.getData().get("mode");
+                MaintenanceMode mode = MaintenanceMode.valueOf(modeStr != null ? modeStr : "GLOBAL");
                 maintenanceManager.enable(
-                    message.getData().get("mode"),
+                    mode,
                     message.getData().get("reason")
                 );
                 break;
@@ -156,13 +161,24 @@ public class MaintenancePaper extends JavaPlugin {
                 break;
             
             case WHITELIST_ADDED:
+            case WHITELIST_REMOVED:
+            case WHITELIST_CLEARED:
                 // Reload whitelist from database
                 whitelistManager.getWhitelistedPlayers();
                 break;
             
-            case WHITELIST_REMOVED:
-                // Reload whitelist from database
-                whitelistManager.getWhitelistedPlayers();
+            case CONFIG_RELOAD:
+                try {
+                    config.load();
+                    getLogger().info("Configuration reloaded from Redis signal");
+                } catch (Exception e) {
+                    getLogger().warning("Failed to reload config: " + e.getMessage());
+                }
+                break;
+            
+            case TIMER_SCHEDULED:
+            case TIMER_CANCELLED:
+                // Timer events handled by TimerManager
                 break;
         }
     }
@@ -171,9 +187,9 @@ public class MaintenancePaper extends JavaPlugin {
         getLogger().info("");
         getLogger().info("  __  __       _       _                                  ");
         getLogger().info(" |  \\/  | __ _(_)_ __ | |_ ___ _ __   __ _ _ __   ___ ___ ");
-        getLogger().info(" | |\/| |/ _` | | '_ \\| __/ _ \\ '_ \\ / _` | '_ \\ / __/ _ \\");
+        getLogger().info(" | |\\/| |/ _` | | '_ \\| __/ _ \\ '_ \\ / _` | '_ \\ / __/ _ \\");
         getLogger().info(" | |  | | (_| | | | | | ||  __/ | | | (_| | | | | (_|  __/");
-        getLogger().info(" |_|  |_|\\__,_|_|_| |_|\\__\___|_| |_|\\__,_|_| |_|\\___\\___|");
+        getLogger().info(" |_|  |_|\\__,_|_|_| |_|\\__\\___|_| |_|\\__,_|_| |_|\\___\\___|");
         getLogger().info("");
         getLogger().info("  Universal Maintenance Plugin v" + getPluginMeta().getVersion());
         getLogger().info("  Author: D4vide106");

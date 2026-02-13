@@ -2,6 +2,7 @@ package me.d4vide106.maintenance.config;
 
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.IOException;
@@ -213,8 +214,12 @@ public class MaintenanceConfig {
     
     // Timer
     public int[] getWarningIntervals() {
-        List<?> list = root.node("timer", "warnings").getList(Object.class, Arrays.asList(300, 180, 60, 30, 10));
-        return list.stream().mapToInt(o -> ((Number)o).intValue()).toArray();
+        try {
+            List<?> list = root.node("timer", "warnings").getList(Object.class, Arrays.asList(300, 180, 60, 30, 10));
+            return list.stream().mapToInt(o -> ((Number)o).intValue()).toArray();
+        } catch (SerializationException e) {
+            return new int[]{300, 180, 60, 30, 10};
+        }
     }
     
     public String getWarningMessage() {
