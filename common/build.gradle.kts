@@ -1,26 +1,50 @@
+plugins {
+    `java-library`
+}
+
+val adventureVersion: String by project
+val configurateVersion: String by project
+val hikariVersion: String by project
+val jedisVersion: String by project
+val gsonVersion: String by project
+
 dependencies {
-    // Adventure API per componenti testo cross-platform
-    api("net.kyori:adventure-api:4.16.0")
-    api("net.kyori:adventure-text-minimessage:4.16.0")
-    api("net.kyori:adventure-text-serializer-legacy:4.16.0")
-    api("net.kyori:adventure-text-serializer-gson:4.16.0")
+    // Adventure API (text components)
+    api("net.kyori:adventure-api:$adventureVersion")
+    api("net.kyori:adventure-text-minimessage:$adventureVersion")
+    api("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
+    api("net.kyori:adventure-text-serializer-plain:$adventureVersion")
     
-    // Configuration library
-    api("org.spongepowered:configurate-yaml:4.1.2")
-    api("org.spongepowered:configurate-gson:4.1.2")
-    api("org.spongepowered:configurate-hocon:4.1.2")
+    // Configurate (YAML configuration)
+    api("org.spongepowered:configurate-yaml:$configurateVersion")
+    api("org.spongepowered:configurate-core:$configurateVersion")
     
-    // Database
-    api("com.zaxxer:HikariCP:5.1.0")
-    api("org.mariadb.jdbc:mariadb-java-client:3.3.2")
-    api("com.mysql:mysql-connector-j:8.2.0")
-    api("redis.clients:jedis:5.1.0")
+    // HikariCP (database connection pooling)
+    api("com.zaxxer:HikariCP:$hikariVersion")
     
-    // Utilities
-    api("com.google.code.gson:gson:2.10.1")
-    api("org.jetbrains:annotations:24.1.0")
+    // Jedis (Redis client)
+    api("redis.clients:jedis:$jedisVersion")
+    
+    // Gson (JSON serialization)
+    api("com.google.code.gson:gson:$gsonVersion")
+    
+    // SQLite JDBC driver
+    api("org.xerial:sqlite-jdbc:3.44.1.0")
+    
+    // MySQL JDBC driver
+    compileOnly("mysql:mysql-connector-java:8.0.33")
+    
+    // PostgreSQL JDBC driver
+    compileOnly("org.postgresql:postgresql:42.7.1")
+    
+    // JetBrains Annotations
+    compileOnly("org.jetbrains:annotations:24.1.0")
     
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.mockito:mockito-core:5.8.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

@@ -1,6 +1,5 @@
 package me.d4vide106.maintenance.paper;
 
-import me.d4vide106.maintenance.api.MaintenanceAPI;
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseFactory;
@@ -9,7 +8,10 @@ import me.d4vide106.maintenance.manager.MaintenanceManager;
 import me.d4vide106.maintenance.manager.TimerManager;
 import me.d4vide106.maintenance.manager.WhitelistManager;
 import me.d4vide106.maintenance.paper.command.MaintenanceCommand;
+import me.d4vide106.maintenance.paper.expansion.MaintenancePlaceholderExpansion;
 import me.d4vide106.maintenance.paper.listener.ConnectionListener;
+import me.d4vide106.maintenance.paper.listener.ServerListPingListener;
+import me.d4vide106.maintenance.paper.util.VersionAdapter;
 import me.d4vide106.maintenance.redis.RedisManager;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +38,7 @@ public class MaintenancePaper extends JavaPlugin {
     private TimerManager timerManager;
     
     private MaintenanceAPIImpl apiImpl;
+    private MaintenancePlaceholderExpansion placeholderExpansion;
     
     @Override
     public void onEnable() {
@@ -44,13 +47,16 @@ public class MaintenancePaper extends JavaPlugin {
         // Print banner
         printBanner();
         
+        // Print version info
+        VersionAdapter.printVersionInfo();
+        
         try {
             // Load configuration
             getLogger().info("Loading configuration...");
             loadConfiguration();
             
             // Initialize database
-            getLogger().info("Initializing database...");
+            getLogger().info("Initializing database (" + config.getDatabaseType() + ")...");
             initializeDatabase();
             
             // Initialize Redis (if enabled)
@@ -75,9 +81,16 @@ public class MaintenancePaper extends JavaPlugin {
             getLogger().info("Registering listeners...");
             registerListeners();
             
+            // Register PlaceholderAPI (if available)
+            if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+                getLogger().info("Hooking into PlaceholderAPI...");
+                registerPlaceholders();
+            }
+            
             // Initialize bStats
             if (config.isBStatsEnabled()) {
                 new Metrics(this, 12345); // TODO: Get real bStats ID
+                getLogger().info("bStats metrics enabled");
             }
             
             long loadTime = System.currentTimeMillis() - startTime;
@@ -88,10 +101,21 @@ public class MaintenancePaper extends JavaPlugin {
             getLogger().info("§a│                                                 │");
             getLogger().info(String.format("§a│  §7Version: §f%-36s§a│", getDescription().getVersion()));
             getLogger().info(String.format("§a│  §7Platform: §f%-35s§a│", "Paper/Spigot"));
+            getLogger().info(String.format("§a│  §7MC Version: §f%-33s§a│", VersionAdapter.getVersion()));
             getLogger().info(String.format("§a│  §7Load Time: §f%-33s§a│", loadTime + "ms"));
             getLogger().info("§a│                                                 │");
             getLogger().info("§a└─────────────────────────────────────────────────┘");
             getLogger().info("");
+            
+            // Log maintenance status
+            if (maintenanceManager.isEnabled()) {
+                getLogger().warning("⚠ Maintenance mode is currently ENABLED");
+                getLogger().warning("Mode: " + maintenanceManager.getMode());
+                String reason = maintenanceManager.getReason();
+                if (reason != null) {
+                    getLogger().warning("Reason: " + reason);
+                }
+            }
             
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Failed to enable MaintenanceUniversal!", e);
@@ -103,6 +127,11 @@ public class MaintenancePaper extends JavaPlugin {
     public void onDisable() {
         getLogger().info("Shutting down MaintenanceUniversal...");
         
+        // Unregister PlaceholderAPI
+        if (placeholderExpansion != null) {
+            placeholderExpansion.unregister();
+        }
+        
         // Unregister API
         MaintenanceProvider.unregister();
         
@@ -113,12 +142,20 @@ public class MaintenancePaper extends JavaPlugin {
         
         // Close database
         if (database != null) {
-            database.shutdown().join();
+            try {
+                database.shutdown().join();
+            } catch (Exception e) {
+                getLogger().warning("Error closing database: " + e.getMessage());
+            }
         }
         
         // Close Redis
         if (redis != null) {
-            redis.shutdown().join();
+            try {
+                redis.shutdown().join();
+            } catch (Exception e) {
+                getLogger().warning("Error closing Redis: " + e.getMessage());
+            }
         }
         
         getLogger().info("§cMaintenanceUniversal disabled.");
@@ -156,6 +193,23 @@ public class MaintenancePaper extends JavaPlugin {
             config.getRedisChannel()
         );
         redis.initialize().join();
+        
+        // Subscribe to Redis messages
+        redis.subscribe(message -> {
+            getLogger().info("Received Redis message: " + message.getType());
+            // Handle cross-server sync
+            switch (message.getType()) {
+                case MAINTENANCE_ENABLED:
+                case MAINTENANCE_DISABLED:
+                case WHITELIST_ADDED:
+                case WHITELIST_REMOVED:
+                case WHITELIST_CLEARED:
+                    // Refresh from database
+                    maintenanceManager.initialize();
+                    whitelistManager.refresh();
+                    break;
+            }
+        });
     }
     
     private void initializeManagers() {
@@ -188,10 +242,26 @@ public class MaintenancePaper extends JavaPlugin {
     }
     
     private void registerListeners() {
+        // Connection listener
         getServer().getPluginManager().registerEvents(
             new ConnectionListener(this, config, maintenanceManager, whitelistManager),
             this
         );
+        
+        // Server list ping listener (MOTD)
+        getServer().getPluginManager().registerEvents(
+            new ServerListPingListener(this, config, maintenanceManager),
+            this
+        );
+    }
+    
+    private void registerPlaceholders() {
+        placeholderExpansion = new MaintenancePlaceholderExpansion(this);
+        if (placeholderExpansion.register()) {
+            getLogger().info("✓ PlaceholderAPI expansion registered");
+        } else {
+            getLogger().warning("✗ Failed to register PlaceholderAPI expansion");
+        }
     }
     
     // Getters
