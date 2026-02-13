@@ -18,6 +18,12 @@ allprojects {
         // Paper
         maven("https://repo.papermc.io/repository/maven-public/")
         
+        // PlaceholderAPI
+        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+        
+        // ProtocolLib
+        maven("https://repo.dmulloy2.net/repository/public/")
+        
         // Velocity
         maven("https://repo.velocitypowered.com/releases/")
         maven("https://repo.velocitypowered.com/snapshots/")
