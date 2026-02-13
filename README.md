@@ -3,167 +3,169 @@
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Java](https://img.shields.io/badge/Java-17%2B-orange)
-![Minecraft](https://img.shields.io/badge/Minecraft-1.13%2B-brightgreen)
+![Minecraft](https://img.shields.io/badge/minecraft-1.13--1.26-green)
+![License](https://img.shields.io/badge/license-MIT-orange)
+![Platform](https://img.shields.io/badge/platform-Paper%20%7C%20Velocity%20%7C%20Fabric%20%7C%20Forge-purple)
 
-**Professional multi-platform maintenance management system for Minecraft servers**
+**Professional multi-platform maintenance management system for Minecraft**
 
-Supports Fabric • Forge • Paper • Velocity
+Supports Paper, Velocity, Fabric, and Forge with unified configuration and API
 
-[Features](#features) • [Installation](#installation) • [Documentation](#documentation) • [API](#api)
+[Features](#-features) • [Installation](#-installation) • [Commands](#-commands) • [API](#-api) • [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 📋 Features
+## 🎯 Features
 
-### Core Features
-- ✅ **Multi-Platform Support**: Fabric, Forge (NeoForge), Paper, and Velocity
-- 🔄 **Cross-Server Sync**: MySQL and Redis support for multi-server networks
-- 🎨 **Modern UI**: MiniMessage formatting with gradient support
-- 🌍 **Internationalization**: Full i18n support with custom language files
-- ⏲️ **Scheduled Maintenance**: Timer system with countdown and auto-enable
-- 👥 **Whitelist System**: Permission-based bypass for staff members
-- 📊 **Server List Customization**: Custom MOTD and player count during maintenance
+### ✨ Core Features
+- ✅ **Multi-Platform Support** - Works on Paper, Velocity, Fabric, and Forge
+- 🔄 **Multi-Server Sync** - Redis integration for network-wide maintenance
+- ⏰ **Scheduled Maintenance** - Automatic timers with countdown warnings
+- 📝 **Whitelist System** - Advanced player whitelist with permissions
+- 🎨 **MiniMessage Support** - Rich text formatting with gradients and colors
+- 📦 **Database Support** - SQLite, MySQL, MariaDB, PostgreSQL
+- 🔔 **Discord Integration** - Webhook notifications with rich embeds
+- 📊 **Statistics** - Track sessions, durations, and player metrics
+- 🌐 **Multi-Language** - Support for 7+ languages
+- 🔌 **PlaceholderAPI** - Full integration for other plugins
 
-### Advanced Features
-- 🔌 **Developer API**: Extensive API for third-party integrations
-- 📢 **Discord Integration**: Webhook notifications for maintenance events
-- 📈 **Metrics & Analytics**: bStats integration for usage statistics
-- 🔐 **Security**: SQL injection protection, input validation
-- 🚀 **Performance**: HikariCP connection pooling, async operations
-- 🎯 **PlaceholderAPI**: Full PAPI support on Paper platforms
+### 🚀 Advanced Features
+- Custom MOTD during maintenance
+- Server list modification (version text, player count, icon)
+- Boss bar countdown with customizable colors
+- Action bar notifications
+- Title/subtitle messages
+- Sound effects on warnings
+- Auto-kick with delay
+- Permission-based bypass
+- Command execution on enable/disable
+- Auto-restart after maintenance
+- Rate limiting and caching
+- Async operations for performance
 
-## 🚀 Installation
+---
 
-### Requirements
-- Java 17 or higher
-- Minecraft 1.13+ (Modern versions)
-- Gradle 8.0+ (for building)
+## 📦 Installation
 
-### Quick Start
+### Paper / Spigot / Bukkit
 
-1. **Clone the repository**:
-```bash
-git clone https://github.com/D4vide106/MaintenanceUniversal.git
-cd MaintenanceUniversal
+1. Download the latest `MaintenanceUniversal-Paper-X.X.X.jar`
+2. Place in your `plugins/` folder
+3. Restart the server
+4. Configure `plugins/MaintenanceUniversal/config.yml`
+
+### Velocity
+
+1. Download the latest `MaintenanceUniversal-Velocity-X.X.X.jar`
+2. Place in your `plugins/` folder
+3. Restart the proxy
+4. Configure `plugins/MaintenanceUniversal/config.yml`
+
+### Fabric
+
+1. Download the latest `MaintenanceUniversal-Fabric-X.X.X.jar`
+2. Place in your `mods/` folder
+3. Install Fabric API if not already installed
+4. Restart the server
+5. Configure `config/MaintenanceUniversal/config.yml`
+
+### Forge / NeoForge
+
+1. Download the latest `MaintenanceUniversal-Forge-X.X.X.jar`
+2. Place in your `mods/` folder
+3. Restart the server
+4. Configure `config/MaintenanceUniversal/config.yml`
+
+---
+
+## 💻 Commands
+
+### Main Commands
+
+```
+/maintenance enable [reason]          - Enable maintenance mode
+/maintenance disable                  - Disable maintenance mode
+/maintenance toggle                   - Toggle maintenance on/off
+/maintenance status                   - View current status
+/maintenance reload                   - Reload configuration
 ```
 
-2. **Build all platforms**:
-```bash
-# Linux/Mac
-./gradlew clean buildAll
+### Timer Commands
 
-# Windows
-gradlew.bat clean buildAll
+```
+/maintenance schedule <delay> <duration>  - Schedule maintenance
+/maintenance timer cancel                 - Cancel active timer
+/maintenance timer status                 - View timer status
 ```
 
-3. **Locate output files**:
+### Whitelist Commands
+
 ```
-build/distributions/
-├── MaintenanceUniversal-Paper-1.0.0.jar
-├── MaintenanceUniversal-Velocity-1.0.0.jar
-├── MaintenanceUniversal-Fabric-1.0.0.jar
-└── MaintenanceUniversal-Forge-1.0.0.jar
+/maintenance whitelist add <player> [reason]  - Add player to whitelist
+/maintenance whitelist remove <player>        - Remove player from whitelist
+/maintenance whitelist list                   - List whitelisted players
+/maintenance whitelist clear                  - Clear entire whitelist
 ```
 
-4. **Install on your server**:
-- Place the appropriate JAR file in your server's plugins/mods folder
-- Restart the server
-- Configure in `config/maintenance/config.yml`
+### Server Commands (Velocity Only)
 
-## 📖 Documentation
+```
+/maintenance server <server> enable   - Enable for specific server
+/maintenance server <server> disable  - Disable for specific server
+/maintenance server list              - List server statuses
+```
 
-### Commands
+### Admin Commands
 
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/maintenance enable` | Enable maintenance mode | `maintenance.toggle` |
-| `/maintenance disable` | Disable maintenance mode | `maintenance.toggle` |
-| `/maintenance whitelist add <player>` | Add player to whitelist | `maintenance.whitelist` |
-| `/maintenance whitelist remove <player>` | Remove player from whitelist | `maintenance.whitelist` |
-| `/maintenance timer <minutes>` | Schedule maintenance timer | `maintenance.timer` |
-| `/maintenance reload` | Reload configuration | `maintenance.reload` |
+```
+/maintenance stats           - View statistics
+/maintenance message <type>  - Edit messages
+/maintenance motd <text>     - Set custom MOTD
+/maintenance info            - Plugin information
+```
 
-### Permissions
+---
 
-- `maintenance.admin` - Full access to all features
-- `maintenance.bypass` - Bypass maintenance mode
-- `maintenance.toggle` - Enable/disable maintenance
-- `maintenance.whitelist` - Manage whitelist
-- `maintenance.timer` - Manage timers
-- `maintenance.reload` - Reload configuration
+## 🛡️ Permissions
 
-### Configuration
+### Basic Permissions
+
+| Permission | Description | Default |
+|------------|-------------|----------|
+| `maintenance.command` | Use main command | OP |
+| `maintenance.bypass` | Bypass maintenance | OP |
+| `maintenance.notify` | Receive admin notifications | OP |
+
+### Admin Permissions
+
+| Permission | Description | Default |
+|------------|-------------|----------|
+| `maintenance.toggle` | Enable/disable maintenance | OP |
+| `maintenance.schedule` | Schedule timers | OP |
+| `maintenance.whitelist` | Manage whitelist | OP |
+| `maintenance.reload` | Reload configuration | OP |
+| `maintenance.stats` | View statistics | OP |
+
+### Wildcard
 
 ```yaml
-# config.yml example
-maintenance:
-  enabled: false
-  kick-message: "<gradient:red:gold>Server is under maintenance</gradient>"
-  whitelist-mode: true
-  
-database:
-  type: sqlite # sqlite, mysql, redis
-  mysql:
-    host: localhost
-    port: 3306
-    database: maintenance
-    username: root
-    password: ""
-    
-discord:
-  enabled: false
-  webhook-url: ""
-  send-on-enable: true
-  send-on-disable: true
+maintenance.admin:  # Grants all permissions
+  - maintenance.*
 ```
 
-## 🔌 API
+---
 
-### For Developers
+## 📚 API
 
-```java
-import me.d4vide106.maintenance.api.MaintenanceAPI;
-import java.util.UUID;
+### Getting Started
 
-public class Example {
-    public void example() {
-        MaintenanceAPI api = MaintenanceAPI.getInstance();
-        
-        // Check if maintenance is enabled
-        if (api.isMaintenanceEnabled()) {
-            System.out.println("Maintenance is active!");
-        }
-        
-        // Enable maintenance
-        api.enableMaintenance().thenAccept(success -> {
-            if (success) {
-                System.out.println("Maintenance enabled!");
-            }
-        });
-        
-        // Add player to whitelist
-        UUID uuid = UUID.fromString("...");
-        api.addToWhitelist(uuid, "PlayerName").thenAccept(success -> {
-            System.out.println("Player whitelisted: " + success);
-        });
-        
-        // Schedule timer (30 minutes)
-        api.scheduleTimer(30, 60).thenAccept(success -> {
-            System.out.println("Timer scheduled!");
-        });
-    }
-}
-```
-
-### Maven Dependency
+#### Maven
 
 ```xml
 <repository>
-    <id>jitpack.io</id>
+    <id>jitpack</id>
     <url>https://jitpack.io</url>
 </repository>
 
@@ -175,58 +177,203 @@ public class Example {
 </dependency>
 ```
 
-## 🏗️ Project Structure
+#### Gradle (Kotlin DSL)
 
+```kotlin
+repositories {
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    compileOnly("com.github.D4vide106:MaintenanceUniversal:1.0.0")
+}
 ```
-MaintenanceUniversal/
-├── common/          # Shared code across all platforms
-├── paper/           # Paper/Spigot implementation
-├── velocity/        # Velocity proxy implementation
-├── fabric/          # Fabric mod implementation
-├── forge/           # Forge/NeoForge mod implementation
-├── scripts/         # Build and installation scripts
-└── .github/         # GitHub Actions CI/CD
+
+### API Usage
+
+```java
+import me.d4vide106.maintenance.api.MaintenanceAPI;
+
+public class MyPlugin {
+    
+    public void example() {
+        // Get API instance
+        MaintenanceAPI api = MaintenanceAPI.getInstance();
+        
+        // Check if maintenance is enabled
+        if (api.isMaintenanceEnabled()) {
+            System.out.println("Maintenance is active!");
+        }
+        
+        // Enable maintenance
+        api.enableMaintenance().thenAccept(success -> {
+            if (success) {
+                api.broadcastNotification("Maintenance enabled!");
+            }
+        });
+        
+        // Add player to whitelist
+        UUID playerUuid = UUID.fromString("...");
+        api.addToWhitelist(playerUuid, "PlayerName", "Staff member")
+           .thenAccept(added -> {
+               System.out.println("Player added: " + added);
+           });
+        
+        // Schedule maintenance
+        api.scheduleTimer(
+            Duration.ofMinutes(10),  // Start in 10 minutes
+            Duration.ofHours(1)       // Duration: 1 hour
+        );
+    }
+}
 ```
+
+### Events
+
+```java
+import me.d4vide106.maintenance.api.event.*;
+
+public class MaintenanceListener {
+    
+    // Listen for maintenance enable (cancellable)
+    public void onMaintenanceEnable(MaintenanceEnableEvent event) {
+        if (event.getReason().contains("emergency")) {
+            // Allow emergency maintenance
+            return;
+        }
+        // Cancel non-emergency maintenance
+        event.setCancelled(true);
+    }
+    
+    // Listen for player kick (cancellable)
+    public void onPlayerKick(PlayerMaintenanceKickEvent event) {
+        UUID uuid = event.getPlayerUuid();
+        if (hasSpecialPermission(uuid)) {
+            event.setCancelled(true);  // Don't kick this player
+        }
+    }
+    
+    // Listen for maintenance enabled (not cancellable)
+    public void onMaintenanceEnabled(MaintenanceEnabledEvent event) {
+        // Send notification to Discord, log, etc.
+        logToDiscord("Maintenance enabled by " + event.getEnabledBy());
+    }
+}
+```
+
+---
+
+## 🛠️ Building from Source
+
+### Prerequisites
+
+- Java 17 or higher
+- Git
+
+### Clone & Build
+
+```bash
+git clone https://github.com/D4vide106/MaintenanceUniversal.git
+cd MaintenanceUniversal
+
+# Build all platforms
+./gradlew clean buildAll
+
+# Build specific platform
+./gradlew :paper:shadowJar
+./gradlew :velocity:shadowJar
+./gradlew :fabric:remapJar
+./gradlew :forge:shadowJar
+```
+
+Output files will be in `build/distributions/`
+
+---
+
+## 🌐 Multi-Language Support
+
+### Available Languages
+
+- 🇬🇧 English (en_US)
+- 🇮🇹 Italian (it_IT)
+- 🇪🇸 Spanish (es_ES)
+- 🇩🇪 German (de_DE)
+- 🇫🇷 French (fr_FR)
+- 🇧🇷 Portuguese (pt_BR)
+- 🇷🇺 Russian (ru_RU)
+
+Set in `config.yml`:
+
+```yaml
+settings:
+  language: it_IT
+```
+
+---
+
+## 📊 Statistics
+
+View plugin statistics at [bStats](https://bstats.org/plugin/bukkit/MaintenanceUniversal)
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please follow these guidelines:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📊 Comparison
+### Code Style
 
-### Why Maintenance Universal?
+- Use Java 17 features
+- Follow Google Java Style Guide
+- Add JavaDoc comments for public APIs
+- Write unit tests for new features
 
-| Feature | Maintenance Universal | Other Plugins |
-|---------|----------------------|---------------|
-| Multi-Platform | ✅ Fabric, Forge, Paper, Velocity | ❌ Usually single platform |
-| Cross-Server Sync | ✅ MySQL + Redis | ❌ Limited or none |
-| Modern API | ✅ CompletableFuture based | ⚠️ Basic or none |
-| Discord Integration | ✅ Webhooks included | ❌ Requires separate plugin |
-| Performance | ✅ Async, connection pooling | ⚠️ Varies |
-| Developer Friendly | ✅ Full API, events | ⚠️ Limited |
+---
 
-## 📜 License
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
+---
+
+## 👤 Author
 
 **D4vide106**
+
 - GitHub: [@D4vide106](https://github.com/D4vide106)
-- Organization: [@Infinity-Wonderful](https://github.com/Infinity-Wonderful)
+- Discord: [Join Server](https://discord.gg/your-server)
 
-## 🌟 Support
+---
 
-If you find this project useful, please consider giving it a ⭐ on GitHub!
+## ⭐ Support
+
+If you like this project, please consider:
+
+- Giving it a ⭐ on GitHub
+- Sharing it with friends
+- Contributing code or translations
+- Reporting bugs and suggesting features
+
+---
+
+## 📢 Links
+
+- [SpigotMC](https://www.spigotmc.org/resources/)
+- [Modrinth](https://modrinth.com/plugin/maintenance-universal)
+- [Hangar](https://hangar.papermc.io/D4vide106/MaintenanceUniversal)
+- [Documentation](https://github.com/D4vide106/MaintenanceUniversal/wiki)
+- [Discord Support](https://discord.gg/your-server)
 
 ---
 
 <div align="center">
-Made with ❤️ by D4vide106
+
+**Made with ❤️ by D4vide106**
+
 </div>

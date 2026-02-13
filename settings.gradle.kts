@@ -1,30 +1,27 @@
 pluginManagement {
     repositories {
-        maven("https://maven.fabricmc.net/") {
-            name = "Fabric"
-        }
-        maven("https://maven.architectury.dev/") {
-            name = "Architectury"
-        }
-        maven("https://maven.neoforged.net/releases/") {
-            name = "NeoForged"
-        }
-        maven("https://maven.minecraftforge.net/") {
-            name = "Forge"
-        }
-        maven("https://maven.parchmentmc.org") {
-            name = "ParchmentMC"
-        }
         gradlePluginPortal()
-        mavenCentral()
+        maven("https://maven.fabricmc.net/")
+        maven("https://maven.architectury.dev/")
+        maven("https://maven.neoforged.net/releases/")
+        maven("https://maven.minecraftforge.net/")
+        maven("https://maven.papermc.io/repository/maven-public/")
     }
 }
 
 rootProject.name = "MaintenanceUniversal"
 
-// Platform modules
+// Common module (shared code)
 include("common")
+
+// Platform implementations
 include("paper")
 include("velocity")
 include("fabric")
 include("forge")
+
+project(":common").projectDir = file("common")
+project(":paper").projectDir = file("paper")
+project(":velocity").projectDir = file("velocity")
+project(":fabric").projectDir = file("fabric")
+project(":forge").projectDir = file("forge")

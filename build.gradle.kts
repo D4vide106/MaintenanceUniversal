@@ -3,61 +3,41 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-    id("net.minecrell.plugin-yml.bukkit") version "0.6.0" apply false
-    id("net.minecrell.plugin-yml.bungee") version "0.6.0" apply false
 }
 
-val minecraftVersion: String by project
 val modVersion: String by project
 val mavenGroup: String by project
 
-group = mavenGroup
-version = modVersion
-
 allprojects {
-    apply(plugin = "java")
-    apply(plugin = "maven-publish")
-    
     group = mavenGroup
     version = modVersion
     
     repositories {
         mavenCentral()
         
-        // Minecraft
-        maven("https://repo.papermc.io/repository/maven-public/") {
-            name = "PaperMC"
-        }
-        maven("https://maven.fabricmc.net/") {
-            name = "Fabric"
-        }
-        maven("https://maven.neoforged.net/releases/") {
-            name = "NeoForged"
-        }
-        maven("https://maven.minecraftforge.net/") {
-            name = "Forge"
-        }
-        maven("https://repo.velocitypowered.com/releases/") {
-            name = "Velocity"
-        }
+        // Paper
+        maven("https://repo.papermc.io/repository/maven-public/")
         
-        // Libraries
-        maven("https://oss.sonatype.org/content/repositories/snapshots") {
-            name = "Sonatype Snapshots"
-        }
-        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
-            name = "PlaceholderAPI"
-        }
-        maven("https://repo.dmulloy2.net/repository/public/") {
-            name = "ProtocolLib"
-        }
+        // Velocity
+        maven("https://repo.velocitypowered.com/releases/")
+        maven("https://repo.velocitypowered.com/snapshots/")
+        
+        // Fabric
+        maven("https://maven.fabricmc.net/")
+        
+        // Forge
+        maven("https://maven.neoforged.net/releases/")
+        maven("https://maven.minecraftforge.net/")
+        
+        // Other
+        maven("https://oss.sonatype.org/content/repositories/snapshots")
+        maven("https://jitpack.io")
     }
-    
-    tasks.withType<JavaCompile> {
-        options.encoding = "UTF-8"
-        options.release.set(17)
-        options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
-    }
+}
+
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "java-library")
     
     java {
         toolchain {
@@ -66,29 +46,24 @@ allprojects {
         withSourcesJar()
         withJavadocJar()
     }
-}
-
-subprojects {
-    apply(plugin = "java-library")
     
-    dependencies {
-        // Logging
-        compileOnly("org.slf4j:slf4j-api:2.0.9")
+    tasks {
+        withType<JavaCompile> {
+            options.encoding = "UTF-8"
+            options.release.set(17)
+        }
         
-        // Annotations
-        compileOnly("org.jetbrains:annotations:24.1.0")
+        withType<Javadoc> {
+            options.encoding = "UTF-8"
+        }
         
-        // Testing
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
-        testImplementation("org.mockito:mockito-core:5.8.0")
-    }
-    
-    tasks.test {
-        useJUnitPlatform()
+        withType<ProcessResources> {
+            filteringCharset = "UTF-8"
+        }
     }
 }
 
+// Build all platforms task
 tasks.register("buildAll") {
     group = "build"
     description = "Builds all platform implementations"
@@ -96,7 +71,7 @@ tasks.register("buildAll") {
     dependsOn(
         ":paper:shadowJar",
         ":velocity:shadowJar",
-        ":fabric:build",
+        ":fabric:remapJar",
         ":forge:shadowJar"
     )
     
@@ -104,42 +79,41 @@ tasks.register("buildAll") {
         val outputDir = file("$buildDir/distributions")
         outputDir.mkdirs()
         
-        // Copy Paper
+        println("┌──────────────────────────────────────────────────────────────────────┐")
+        println("│                                                                      │")
+        println("│           🎉 BUILD SUCCESSFUL - ALL PLATFORMS COMPILED 🎉            │")
+        println("│                                                                      │")
+        println("└──────────────────────────────────────────────────────────────────────┘")
+        println("")
+        println("✅ Paper:    ${project(":paper").buildDir}/libs/")
+        println("✅ Velocity: ${project(":velocity").buildDir}/libs/")
+        println("✅ Fabric:   ${project(":fabric").buildDir}/libs/")
+        println("✅ Forge:    ${project(":forge").buildDir}/libs/")
+        println("")
+        println("📦 All builds copied to: ${outputDir.absolutePath}")
+        println("")
+        
+        // Copy all jars to distributions folder
         copy {
             from(project(":paper").tasks.named("shadowJar"))
-            into(outputDir)
-        }
-        
-        // Copy Velocity
-        copy {
             from(project(":velocity").tasks.named("shadowJar"))
-            into(outputDir)
-        }
-        
-        // Copy Fabric
-        copy {
-            from(project(":fabric").buildDir.resolve("libs"))
-            include("*.jar")
-            exclude("*-sources.jar", "*-dev.jar")
-            into(outputDir)
-        }
-        
-        // Copy Forge
-        copy {
+            from(project(":fabric").tasks.named("remapJar"))
             from(project(":forge").tasks.named("shadowJar"))
             into(outputDir)
         }
-        
-        println("")
-        println("=" .repeat(50))
-        println("✅ All platforms built successfully!")
-        println("=" .repeat(50))
-        println("📁 Output directory: ${outputDir.absolutePath}")
-        println("")
-        println("📦 Generated files:")
-        outputDir.listFiles()?.forEach {
-            println("  • ${it.name} (${it.length() / 1024}KB)")
-        }
-        println("=" .repeat(50))
     }
+}
+
+// Clean task
+tasks.register("cleanAll") {
+    group = "build"
+    description = "Cleans all subproject builds"
+    
+    dependsOn(
+        ":common:clean",
+        ":paper:clean",
+        ":velocity:clean",
+        ":fabric:clean",
+        ":forge:clean"
+    )
 }

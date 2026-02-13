@@ -2,61 +2,97 @@
 .gradle/
 build/
 out/
+bin/
 
 # IDE
 .idea/
+.vscode/
 *.iml
 *.ipr
 *.iws
-.vscode/
-.project
 .classpath
+.project
 .settings/
-bin/
+*.code-workspace
 
 # Eclipse
 .metadata
+RemoteSystemsTempFiles
 
-# Fabric
-run/
+# IntelliJ
+*.iml
+.idea/
+out/
 
-# Forge
-forge/run/
-forge/logs/
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# Logs
+*.log
+logs/
 
 # Minecraft
-logs/
-crash-reports/
-screenshots/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Output
-output/
-dist/
-distributions/
-
-# Java
-*.class
+run/
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
-!gradle-wrapper.jar
-*.log
-hs_err_pid*
-replay_pid*
 
-# Temporary files
-*.tmp
+# Database
+*.db
+*.sqlite
+*.db-shm
+*.db-wal
+
+# Backups
 *.bak
-*.swp
-*~.nib
+*.backup
+
+# Compiled
+*.class
 
 # Package Files
 *.war
-*.nar
 *.ear
 *.zip
 *.tar.gz
 *.rar
+
+# JVM Crash Logs
+hs_err_pid*
+
+# Temp
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Node (if using for web tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Maven (if used)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
