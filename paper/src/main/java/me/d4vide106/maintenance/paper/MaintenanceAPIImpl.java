@@ -8,6 +8,8 @@ import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.manager.MaintenanceManager;
 import me.d4vide106.maintenance.manager.TimerManager;
 import me.d4vide106.maintenance.manager.WhitelistManager;
+import me.d4vide106.maintenance.paper.scheduler.PlayerScheduler;
+import me.d4vide106.maintenance.paper.scheduler.SchedulerAdapter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -18,9 +20,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Paper implementation of MaintenanceAPI.
+ * Paper implementation of MaintenanceAPI with full Folia support.
  * 
  * @author D4vide106
  * @version 1.0.0
@@ -33,6 +36,7 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     private final MaintenanceManager maintenanceManager;
     private final WhitelistManager whitelistManager;
     private final TimerManager timerManager;
+    private final SchedulerAdapter scheduler;
     
     public MaintenanceAPIImpl(
         @NotNull MaintenancePaper plugin,
@@ -46,6 +50,7 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
         this.maintenanceManager = maintenanceManager;
         this.whitelistManager = whitelistManager;
         this.timerManager = timerManager;
+        this.scheduler = SchedulerAdapter.getScheduler();
     }
     
     @Override
@@ -150,17 +155,28 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
         Bukkit.getOnlinePlayers().stream()
             .filter(p -> !p.hasPermission("maintenance.bypass"))
             .filter(p -> !whitelistManager.isWhitelisted(p.getUniqueId()))
-            .forEach(p -> {
-                if (config.getKickDelay() > 0) {
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        if (p.isOnline()) {
-                            p.kick(kickMessage);
-                        }
-                    }, config.getKickDelay() * 20L);
-                } else {
-                    p.kick(kickMessage);
-                }
-            });
+            .forEach(p -> kickPlayerThreadSafe(p, kickMessage));
+    }
+    
+    /**
+     * Kicks a player in a thread-safe manner (Folia-compatible).
+     */
+    private void kickPlayerThreadSafe(@NotNull Player player, @NotNull Component message) {
+        if (config.getKickDelay() > 0) {
+            PlayerScheduler.runDelayed(
+                plugin,
+                player,
+                () -> {
+                    if (player.isOnline()) {
+                        player.kick(message);
+                    }
+                },
+                config.getKickDelay(),
+                TimeUnit.SECONDS
+            );
+        } else {
+            PlayerScheduler.run(plugin, player, () -> player.kick(message));
+        }
     }
     
     private void broadcastWarning(int seconds) {
@@ -168,7 +184,9 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
             .replace("{time}", formatTime(seconds));
         
         Component component = Component.text(message);
-        Bukkit.broadcast(component);
+        
+        // Broadcast message
+        scheduler.runTask(plugin, () -> Bukkit.broadcast(component));
         
         // Send title if enabled
         if (config.isTitleEnabled()) {
@@ -176,18 +194,22 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
             Component subtitle = Component.text(config.getSubtitleText().replace("{time}", formatTime(seconds)));
             
             Bukkit.getOnlinePlayers().forEach(p -> 
-                p.showTitle(net.kyori.adventure.title.Title.title(title, subtitle))
+                PlayerScheduler.run(plugin, p, () ->
+                    p.showTitle(net.kyori.adventure.title.Title.title(title, subtitle))
+                )
             );
         }
         
         // Play sound if enabled
         if (config.isSoundEnabled()) {
             Bukkit.getOnlinePlayers().forEach(p -> 
-                p.playSound(
-                    p.getLocation(),
-                    org.bukkit.Sound.valueOf(config.getSoundType()),
-                    config.getSoundVolume(),
-                    config.getSoundPitch()
+                PlayerScheduler.run(plugin, p, () ->
+                    p.playSound(
+                        p.getLocation(),
+                        org.bukkit.Sound.valueOf(config.getSoundType()),
+                        config.getSoundVolume(),
+                        config.getSoundPitch()
+                    )
                 )
             );
         }
