@@ -7,7 +7,6 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import me.d4vide106.maintenance.api.MaintenanceMode;
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseFactory;
@@ -15,24 +14,13 @@ import me.d4vide106.maintenance.database.DatabaseProvider;
 import me.d4vide106.maintenance.manager.MaintenanceManager;
 import me.d4vide106.maintenance.manager.TimerManager;
 import me.d4vide106.maintenance.manager.WhitelistManager;
-import me.d4vide106.maintenance.redis.RedisManager;
-import me.d4vide106.maintenance.redis.RedisMessage;
 import me.d4vide106.maintenance.velocity.command.MaintenanceCommand;
 import me.d4vide106.maintenance.velocity.listener.ConnectionListener;
 import me.d4vide106.maintenance.velocity.listener.ProxyPingListener;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
 
-/**
- * Main plugin class for Velocity proxy.
- * Also compatible with BungeeCord and Waterfall.
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
- */
 @Plugin(
     id = "maintenanceuniversal",
     name = "MaintenanceUniversal",
@@ -52,7 +40,6 @@ public class MaintenanceVelocity {
     private MaintenanceManager maintenanceManager;
     private WhitelistManager whitelistManager;
     private TimerManager timerManager;
-    private RedisManager redisManager;
     private MaintenanceAPIImpl apiImpl;
     
     @Inject
@@ -82,34 +69,11 @@ public class MaintenanceVelocity {
             database.initialize().join();
             logger.info("Database initialized: {}", config.getDatabaseType());
             
-            // Initialize Redis (optional)
-            if (config.isRedisEnabled()) {
-                try {
-                    redisManager = new RedisManager(
-                        config.getRedisHost(),
-                        config.getRedisPort(),
-                        config.getRedisPassword(),
-                        config.getRedisDatabase(),
-                        config.getRedisChannel()
-                    );
-                    redisManager.initialize().join();
-                    redisManager.subscribe(this::handleRedisMessage);
-                    logger.info("Redis sync enabled");
-                } catch (Exception e) {
-                    logger.warn("Failed to initialize Redis: {}", e.getMessage());
-                    redisManager = null;
-                }
-            }
-            
-            // Server identification for Redis
-            String serverName = "velocity-proxy";
-            
             // Initialize managers
-            maintenanceManager = new MaintenanceManager(database);
-            whitelistManager = new WhitelistManager(database, redisManager, serverName);
-            timerManager = new TimerManager(redisManager, serverName);
+            maintenanceManager = new MaintenanceManager();
+            whitelistManager = new WhitelistManager();
+            timerManager = new TimerManager();
             
-            // Initialize whitelist cache
             whitelistManager.initialize().join();
             logger.info("Managers initialized");
             
@@ -132,7 +96,7 @@ public class MaintenanceVelocity {
             logger.info("Commands registered");
             
             logger.info("════════════════════════════════════════════════════════════");
-            logger.info("  ✅ MaintenanceUniversal v1.0.0 enabled successfully!");
+            logger.info("  ✅ MaintenanceUniversal v1.0.0 enabled!");
             logger.info("════════════════════════════════════════════════════════════");
             
         } catch (Exception e) {
@@ -146,10 +110,6 @@ public class MaintenanceVelocity {
         
         if (timerManager != null) {
             timerManager.shutdown();
-        }
-        
-        if (redisManager != null) {
-            redisManager.shutdown().join();
         }
         
         if (database != null) {
@@ -173,44 +133,6 @@ public class MaintenanceVelocity {
         );
     }
     
-    private void handleRedisMessage(@NotNull RedisMessage message) {
-        // Handle Redis messages for cross-server sync
-        switch (message.getType()) {
-            case MAINTENANCE_ENABLED:
-                String modeStr = message.getData().get("mode");
-                MaintenanceMode mode = MaintenanceMode.valueOf(modeStr != null ? modeStr : "GLOBAL");
-                maintenanceManager.enable(
-                    mode,
-                    message.getData().get("reason")
-                );
-                break;
-            
-            case MAINTENANCE_DISABLED:
-                maintenanceManager.disable();
-                break;
-            
-            case WHITELIST_ADDED:
-            case WHITELIST_REMOVED:
-            case WHITELIST_CLEARED:
-                whitelistManager.refresh();
-                break;
-            
-            case CONFIG_RELOAD:
-                try {
-                    config.load();
-                    logger.info("Configuration reloaded from Redis signal");
-                } catch (Exception e) {
-                    logger.warn("Failed to reload config: {}", e.getMessage());
-                }
-                break;
-            
-            case TIMER_SCHEDULED:
-            case TIMER_CANCELLED:
-                // Timer events handled by TimerManager
-                break;
-        }
-    }
-    
     private void detectProxyType() {
         logger.info("════════════════════════════════════════════════════════════");
         logger.info("  Proxy Platform Detection");
@@ -218,7 +140,6 @@ public class MaintenanceVelocity {
         logger.info("  Type: Velocity");
         logger.info("  Version: {}", server.getVersion().getVersion());
         logger.info("  Compatible: Velocity, BungeeCord, Waterfall");
-        logger.info("  Proxy Mode: {}", config != null && config.isProxyMode() ? "Enabled" : "Disabled");
         logger.info("════════════════════════════════════════════════════════════");
     }
     
