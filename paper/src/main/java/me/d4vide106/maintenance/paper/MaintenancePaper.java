@@ -52,10 +52,35 @@ public class MaintenancePaper extends JavaPlugin {
             database.initialize().join();
             getLogger().info("Database initialized: " + config.getDatabaseType());
             
+            // Initialize Redis (optional)
+            if (config.isRedisEnabled()) {
+                try {
+                    redisManager = new RedisManager(
+                        config.getRedisHost(),
+                        config.getRedisPort(),
+                        config.getRedisPassword(),
+                        config.getRedisDatabase(),
+                        config.getRedisChannel()
+                    );
+                    redisManager.initialize().join();
+                    redisManager.subscribe(this::handleRedisMessage);
+                    getLogger().info("Redis sync enabled");
+                } catch (Exception e) {
+                    getLogger().warning("Failed to initialize Redis: " + e.getMessage());
+                    redisManager = null;
+                }
+            }
+            
+            // Get server name (for Redis identification)
+            String serverName = getServer().getName();
+            
             // Initialize managers
             maintenanceManager = new MaintenanceManager(database);
-            whitelistManager = new WhitelistManager(database);
-            timerManager = new TimerManager();
+            whitelistManager = new WhitelistManager(database, redisManager, serverName);
+            timerManager = new TimerManager(redisManager, serverName);
+            
+            // Initialize whitelist cache
+            whitelistManager.initialize().join();
             getLogger().info("Managers initialized");
             
             // Initialize API
@@ -78,24 +103,6 @@ public class MaintenancePaper extends JavaPlugin {
             getCommand("maintenance").setTabCompleter(command);
             getLogger().info("Commands registered");
             
-            // Initialize Redis (optional)
-            if (config.isRedisEnabled()) {
-                try {
-                    redisManager = new RedisManager(
-                        config.getRedisHost(),
-                        config.getRedisPort(),
-                        config.getRedisPassword(),
-                        config.getRedisDatabase(),
-                        config.getRedisChannel()
-                    );
-                    redisManager.initialize().join();
-                    redisManager.subscribe(this::handleRedisMessage);
-                    getLogger().info("Redis sync enabled");
-                } catch (Exception e) {
-                    getLogger().warning("Failed to initialize Redis: " + e.getMessage());
-                }
-            }
-            
             // Register PlaceholderAPI expansion
             if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
                 placeholderExpansion = new MaintenancePlaceholderExpansion(this, apiImpl);
@@ -116,6 +123,10 @@ public class MaintenancePaper extends JavaPlugin {
         
         if (placeholderExpansion != null) {
             // Would call unregister() if available
+        }
+        
+        if (timerManager != null) {
+            timerManager.shutdown();
         }
         
         if (redisManager != null) {
@@ -164,7 +175,7 @@ public class MaintenancePaper extends JavaPlugin {
             case WHITELIST_REMOVED:
             case WHITELIST_CLEARED:
                 // Reload whitelist from database
-                whitelistManager.getWhitelistedPlayers();
+                whitelistManager.refresh();
                 break;
             
             case CONFIG_RELOAD:

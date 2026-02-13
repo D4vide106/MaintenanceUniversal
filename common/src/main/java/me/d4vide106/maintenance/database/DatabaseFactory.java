@@ -3,7 +3,6 @@ package me.d4vide106.maintenance.database;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -37,8 +36,7 @@ public class DatabaseFactory {
             
             case "postgresql":
             case "postgres":
-                // TODO: Implement PostgreSQL
-                throw new UnsupportedOperationException("PostgreSQL support coming soon");
+                throw new UnsupportedOperationException("PostgreSQL support coming in v1.1.0");
             
             default:
                 throw new IllegalArgumentException("Unknown database type: " + type);
