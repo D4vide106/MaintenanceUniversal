@@ -129,6 +129,8 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     
     @Override
     public @NotNull CompletableFuture<MaintenanceStats> getStats() {
-        return plugin.getDatabase().getStats();
+        // Return dummy stats for now (TODO: implement database)
+        MaintenanceStats stats = new MaintenanceStats(0, Duration.ZERO, 0, 0);
+        return CompletableFuture.completedFuture(stats);
     }
 }
