@@ -21,9 +21,6 @@ allprojects {
         // PlaceholderAPI
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
         
-        // ProtocolLib
-        maven("https://repo.dmulloy2.net/repository/public/")
-        
         // Velocity
         maven("https://repo.velocitypowered.com/releases/")
         maven("https://repo.velocitypowered.com/snapshots/")
@@ -82,7 +79,7 @@ tasks.register("buildAll") {
     )
     
     doLast {
-        val outputDir = file("$buildDir/distributions")
+        val outputDir = layout.buildDirectory.dir("distributions").get().asFile
         outputDir.mkdirs()
         
         println("┌──────────────────────────────────────────────────────────────────────┐")
@@ -91,10 +88,10 @@ tasks.register("buildAll") {
         println("│                                                                      │")
         println("└──────────────────────────────────────────────────────────────────────┘")
         println("")
-        println("✅ Paper:    ${project(":paper").buildDir}/libs/")
-        println("✅ Velocity: ${project(":velocity").buildDir}/libs/")
-        println("✅ Fabric:   ${project(":fabric").buildDir}/libs/")
-        println("✅ Forge:    ${project(":forge").buildDir}/libs/")
+        println("✅ Paper:    ${project(":paper").layout.buildDirectory.get()}/libs/")
+        println("✅ Velocity: ${project(":velocity").layout.buildDirectory.get()}/libs/")
+        println("✅ Fabric:   ${project(":fabric").layout.buildDirectory.get()}/libs/")
+        println("✅ Forge:    ${project(":forge").layout.buildDirectory.get()}/libs/")
         println("")
         println("📦 All builds copied to: ${outputDir.absolutePath}")
         println("")

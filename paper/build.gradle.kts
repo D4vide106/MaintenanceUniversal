@@ -13,11 +13,11 @@ dependencies {
     // Paper API
     compileOnly("io.papermc.paper:paper-api:$paperVersion")
     
-    // ProtocolLib (optional)
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
+    // ProtocolLib (optional) - Now on Maven Central with new groupId
+    compileOnly("net.dmulloy2:ProtocolLib:5.4.0")
     
-    // PlaceholderAPI (optional)
-    compileOnly("me.clip:placeholderapi:2.11.5")
+    // PlaceholderAPI (optional) - Latest version
+    compileOnly("me.clip:placeholderapi:2.11.6")
     
     // bStats
     implementation("org.bstats:bstats-bukkit:3.0.2")
