@@ -2,6 +2,8 @@ package me.d4vide106.maintenance.paper;
 
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
+import me.d4vide106.maintenance.database.DatabaseFactory;
+import me.d4vide106.maintenance.database.DatabaseProvider;
 import me.d4vide106.maintenance.manager.MaintenanceManager;
 import me.d4vide106.maintenance.manager.TimerManager;
 import me.d4vide106.maintenance.manager.WhitelistManager;
@@ -20,6 +22,7 @@ import java.util.logging.Level;
 public class MaintenancePaper extends JavaPlugin {
     
     private MaintenanceConfig config;
+    private DatabaseProvider database;
     private MaintenanceManager maintenanceManager;
     private WhitelistManager whitelistManager;
     private TimerManager timerManager;
@@ -36,7 +39,12 @@ public class MaintenancePaper extends JavaPlugin {
             config.load();
             getLogger().info("Configuration loaded successfully");
             
-            // Initialize managers (simplified - no database)
+            // Initialize database
+            database = DatabaseFactory.create(config, getDataFolder().toPath());
+            database.initialize().join();
+            getLogger().info("Database initialized: " + config.getDatabaseType());
+            
+            // Initialize managers
             maintenanceManager = new MaintenanceManager();
             whitelistManager = new WhitelistManager();
             timerManager = new TimerManager();
@@ -82,12 +90,16 @@ public class MaintenancePaper extends JavaPlugin {
             timerManager.shutdown();
         }
         
+        if (database != null) {
+            database.shutdown().join();
+        }
+        
         getLogger().info("MaintenanceUniversal disabled");
     }
     
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-            new ConnectionListener(this, apiImpl, config),
+            new ConnectionListener(this, apiImpl, config, whitelistManager, database),
             this
         );
         
@@ -97,8 +109,12 @@ public class MaintenancePaper extends JavaPlugin {
         );
     }
     
-    public MaintenanceConfig getConfig() {
+    public MaintenanceConfig getMaintenanceConfig() {
         return config;
+    }
+    
+    public DatabaseProvider getDatabase() {
+        return database;
     }
     
     private void printBanner() {
