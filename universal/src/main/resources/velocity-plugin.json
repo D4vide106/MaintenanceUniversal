@@ -1,0 +1,11 @@
+{
+  "id": "maintenanceuniversal",
+  "name": "MaintenanceUniversal",
+  "version": "1.0.0",
+  "description": "Universal maintenance management for all platforms",
+  "url": "https://github.com/D4vide106/MaintenanceUniversal",
+  "authors": [
+    "D4vide106"
+  ],
+  "main": "me.d4vide106.maintenance.velocity.MaintenanceVelocity"
+}

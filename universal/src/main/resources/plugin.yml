@@ -1,0 +1,55 @@
+name: MaintenanceUniversal
+version: 1.0.0
+main: me.d4vide106.maintenance.universal.UniversalPlugin
+author: D4vide106
+api-version: '1.13'
+description: Universal maintenance management for all platforms
+website: https://github.com/D4vide106/MaintenanceUniversal
+
+commands:
+  maintenance:
+    description: Maintenance management commands
+    aliases: [mt, maint]
+    permission: maintenance.admin
+    usage: /<command> [enable|disable|toggle|status|whitelist|stats|reload]
+
+permissions:
+  maintenance.admin:
+    description: Full maintenance access
+    default: op
+    children:
+      maintenance.command: true
+      maintenance.bypass: true
+      maintenance.toggle: true
+      maintenance.whitelist: true
+      maintenance.reload: true
+      maintenance.stats: true
+      maintenance.notify: true
+  
+  maintenance.command:
+    description: Use maintenance commands
+    default: op
+  
+  maintenance.bypass:
+    description: Bypass maintenance mode
+    default: op
+  
+  maintenance.toggle:
+    description: Toggle maintenance
+    default: op
+  
+  maintenance.whitelist:
+    description: Manage whitelist
+    default: op
+  
+  maintenance.reload:
+    description: Reload configuration
+    default: op
+  
+  maintenance.stats:
+    description: View statistics
+    default: op
+  
+  maintenance.notify:
+    description: Receive notifications
+    default: op
