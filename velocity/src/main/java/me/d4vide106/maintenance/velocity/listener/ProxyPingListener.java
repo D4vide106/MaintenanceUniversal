@@ -10,6 +10,10 @@ import me.d4vide106.maintenance.velocity.util.ComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Listener for server list ping events during maintenance.
  */
@@ -53,19 +57,13 @@ public class ProxyPingListener {
         
         // Custom max players
         if (config.isCustomMaxPlayersEnabled()) {
-            ServerPing.SamplePlayer[] sample = originalPing.getPlayers()
+            List<ServerPing.SamplePlayer> sample = originalPing.getPlayers()
                 .map(ServerPing.Players::getSample)
-                .orElse(new ServerPing.SamplePlayer[0]);
+                .orElse(Collections.emptyList());
             
             builder.maximumPlayers(config.getMaintenanceMaxPlayers());
             builder.onlinePlayers(0);
-            
-            ServerPing.Players players = new ServerPing.Players(
-                0,
-                config.getMaintenanceMaxPlayers(),
-                sample
-            );
-            builder.samplePlayers(sample);
+            builder.samplePlayers(sample.toArray(new ServerPing.SamplePlayer[0]));
         }
         
         event.setPing(builder.build());
