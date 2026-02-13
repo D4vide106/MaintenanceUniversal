@@ -3,175 +3,179 @@ package me.d4vide106.maintenance.manager;
 import me.d4vide106.maintenance.api.MaintenanceMode;
 import me.d4vide106.maintenance.api.MaintenanceStats;
 import me.d4vide106.maintenance.database.DatabaseProvider;
-import me.d4vide106.maintenance.redis.RedisManager;
-import me.d4vide106.maintenance.redis.RedisMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Core manager for maintenance mode operations.
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
+ * Manager for maintenance mode operations.
  */
 public class MaintenanceManager {
     
     private final DatabaseProvider database;
-    private final RedisManager redis;
-    private final String serverName;
+    private volatile boolean enabled;
+    private volatile MaintenanceMode mode;
+    private volatile String reason;
+    private volatile long lastStarted;
+    private volatile String startedBy;
+    private volatile int kickedPlayersCount;
     
-    private final AtomicBoolean enabled = new AtomicBoolean(false);
-    private final AtomicReference<MaintenanceMode> mode = new AtomicReference<>(MaintenanceMode.DISABLED);
-    private final AtomicReference<String> reason = new AtomicReference<>("");
-    private long startedAt = 0;
-    
-    public MaintenanceManager(
-        @NotNull DatabaseProvider database,
-        @Nullable RedisManager redis,
-        @NotNull String serverName
-    ) {
+    public MaintenanceManager(@NotNull DatabaseProvider database) {
         this.database = database;
-        this.redis = redis;
-        this.serverName = serverName;
+        this.enabled = false;
+        this.mode = MaintenanceMode.DISABLED;
+        this.reason = null;
+        this.lastStarted = 0;
+        this.startedBy = "CONSOLE";
+        this.kickedPlayersCount = 0;
+        
+        // Load current state from database
+        loadState();
+    }
+    
+    private void loadState() {
+        database.isMaintenanceEnabled().thenAccept(isEnabled -> {
+            this.enabled = isEnabled;
+            if (isEnabled) {
+                database.getMaintenanceMode().thenAccept(modeStr -> {
+                    try {
+                        this.mode = MaintenanceMode.valueOf(modeStr);
+                    } catch (IllegalArgumentException e) {
+                        this.mode = MaintenanceMode.GLOBAL;
+                    }
+                });
+                
+                database.getMaintenanceReason().thenAccept(r -> this.reason = r);
+            }
+        });
     }
     
     /**
-     * Initializes the manager and loads state from database.
+     * Enables maintenance mode.
      */
-    public CompletableFuture<Void> initialize() {
-        return database.isMaintenanceEnabled().thenAccept(enabled -> {
-            this.enabled.set(enabled);
-            if (enabled) {
-                this.mode.set(MaintenanceMode.GLOBAL);
-            }
-        });
+    @NotNull
+    public CompletableFuture<Boolean> enable(@NotNull MaintenanceMode mode, @Nullable String reason) {
+        return enable(mode, reason, "CONSOLE");
+    }
+    
+    /**
+     * Enables maintenance mode with tracking of who started it.
+     */
+    @NotNull
+    public CompletableFuture<Boolean> enable(@NotNull MaintenanceMode mode, @Nullable String reason, @NotNull String startedBy) {
+        this.enabled = true;
+        this.mode = mode;
+        this.reason = reason;
+        this.lastStarted = System.currentTimeMillis();
+        this.startedBy = startedBy;
+        this.kickedPlayersCount = 0;
+        
+        return database.setMaintenanceEnabled(true)
+            .thenCompose(v -> database.setMaintenanceMode(mode.name()))
+            .thenCompose(v -> database.setMaintenanceReason(reason))
+            .thenCompose(v -> database.setLastStarted(lastStarted))
+            .thenCompose(v -> database.incrementSessions())
+            .thenApply(v -> true)
+            .exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return false;
+            });
+    }
+    
+    /**
+     * Disables maintenance mode.
+     */
+    @NotNull
+    public CompletableFuture<Boolean> disable() {
+        if (!enabled) {
+            return CompletableFuture.completedFuture(true);
+        }
+        
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - lastStarted;
+        
+        this.enabled = false;
+        this.mode = MaintenanceMode.DISABLED;
+        
+        return database.setMaintenanceEnabled(false)
+            .thenCompose(v -> database.setMaintenanceMode(MaintenanceMode.DISABLED.name()))
+            .thenCompose(v -> database.setLastEnded(endTime))
+            .thenCompose(v -> database.addDuration(duration))
+            .thenCompose(v -> database.incrementPlayersKicked(kickedPlayersCount))
+            .thenCompose(v -> database.saveSession(
+                lastStarted,
+                endTime,
+                mode.name(),
+                reason,
+                startedBy,
+                kickedPlayersCount
+            ))
+            .thenApply(v -> {
+                // Reset counters
+                kickedPlayersCount = 0;
+                return true;
+            })
+            .exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return false;
+            });
     }
     
     /**
      * Checks if maintenance is enabled.
      */
     public boolean isEnabled() {
-        return enabled.get();
+        return enabled;
     }
     
     /**
-     * Gets the current maintenance mode.
+     * Gets current maintenance mode.
      */
     @NotNull
     public MaintenanceMode getMode() {
-        return mode.get();
+        return mode;
     }
     
     /**
-     * Gets the maintenance reason.
+     * Gets maintenance reason.
      */
     @Nullable
     public String getReason() {
-        return reason.get();
+        return reason;
     }
     
     /**
-     * Enables maintenance mode.
+     * Increments kicked players counter.
      */
-    public CompletableFuture<Boolean> enable(
-        @NotNull MaintenanceMode mode,
-        @Nullable String reason
-    ) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (enabled.getAndSet(true)) {
-                return false; // Already enabled
-            }
-            
-            this.mode.set(mode);
-            this.reason.set(reason);
-            this.startedAt = System.currentTimeMillis();
-            
-            // Save to database
-            database.setMaintenanceEnabled(true).join();
-            database.setMaintenanceMode(mode.name()).join();
-            database.setMaintenanceReason(reason).join();
-            database.setLastStarted(startedAt).join();
-            database.incrementSessions().join();
-            
-            // Broadcast via Redis
-            if (redis != null && redis.isConnected()) {
-                RedisMessage msg = new RedisMessage(
-                    RedisMessage.MessageType.MAINTENANCE_ENABLED,
-                    serverName
-                )
-                .set("mode", mode.name())
-                .set("reason", reason);
-                redis.publish(msg).join();
-            }
-            
-            return true;
-        });
+    public void incrementKickedPlayers() {
+        kickedPlayersCount++;
     }
     
     /**
-     * Disables maintenance mode.
+     * Increments kicked players counter by amount.
      */
-    public CompletableFuture<Boolean> disable() {
-        return CompletableFuture.supplyAsync(() -> {
-            if (!enabled.getAndSet(false)) {
-                return false; // Already disabled
-            }
-            
-            long duration = System.currentTimeMillis() - startedAt;
-            
-            // Save to database
-            database.setMaintenanceEnabled(false).join();
-            database.setLastEnded(System.currentTimeMillis()).join();
-            database.addDuration(duration).join();
-            
-            // Save to history
-            database.saveSession(
-                startedAt,
-                System.currentTimeMillis(),
-                mode.get().name(),
-                reason.get(),
-                null, // TODO: Track who started
-                0     // TODO: Track kicked count
-            ).join();
-            
-            // Reset state
-            this.mode.set(MaintenanceMode.DISABLED);
-            this.reason.set(null);
-            this.startedAt = 0;
-            
-            // Broadcast via Redis
-            if (redis != null && redis.isConnected()) {
-                RedisMessage msg = new RedisMessage(
-                    RedisMessage.MessageType.MAINTENANCE_DISABLED,
-                    serverName
-                )
-                .set("duration", String.valueOf(duration));
-                redis.publish(msg).join();
-            }
-            
-            return true;
-        });
+    public void incrementKickedPlayers(int amount) {
+        kickedPlayersCount += amount;
     }
     
     /**
      * Gets maintenance statistics.
      */
+    @NotNull
     public CompletableFuture<MaintenanceStats> getStats() {
         return database.getStats();
     }
     
     /**
-     * Gets how long maintenance has been active (in milliseconds).
+     * Gets current session duration.
      */
-    public long getDuration() {
-        if (!enabled.get() || startedAt == 0) {
-            return 0;
+    @NotNull
+    public Duration getCurrentDuration() {
+        if (!enabled || lastStarted == 0) {
+            return Duration.ZERO;
         }
-        return System.currentTimeMillis() - startedAt;
+        return Duration.ofMillis(System.currentTimeMillis() - lastStarted);
     }
 }

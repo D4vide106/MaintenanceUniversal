@@ -1,6 +1,5 @@
 package me.d4vide106.maintenance.paper.listener;
 
-import com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent;
 import me.d4vide106.maintenance.api.MaintenanceAPI;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseProvider;
@@ -22,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ConnectionListener implements Listener {
     
-    private final MaintenancePaper plugin;
     private final MaintenanceAPI api;
     private final MaintenanceConfig config;
     private final WhitelistManager whitelistManager;
@@ -35,7 +33,6 @@ public class ConnectionListener implements Listener {
         @NotNull WhitelistManager whitelistManager,
         @NotNull DatabaseProvider database
     ) {
-        this.plugin = plugin;
         this.api = api;
         this.config = config;
         this.whitelistManager = whitelistManager;

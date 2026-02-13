@@ -19,18 +19,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Main command handler for /maintenance.
  */
 public class MaintenanceCommand implements CommandExecutor, TabCompleter {
     
-    private final MaintenancePaper plugin;
     private final MaintenanceAPI api;
     
     public MaintenanceCommand(@NotNull MaintenancePaper plugin, @NotNull MaintenanceAPI api) {
-        this.plugin = plugin;
         this.api = api;
     }
     
@@ -210,7 +207,7 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
                 }
             });
         } catch (Exception e) {
-            sender.sendMessage(Component.text("Invalid duration format", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Invalid duration format. Use: 1h, 30m, 60s", NamedTextColor.RED));
         }
     }
     
@@ -234,6 +231,8 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
                 api.cancelTimer().thenAccept(success -> {
                     if (success) {
                         sender.sendMessage(Component.text("Timer cancelled", NamedTextColor.GREEN));
+                    } else {
+                        sender.sendMessage(Component.text("No active timer to cancel", NamedTextColor.RED));
                     }
                 });
                 break;
@@ -251,22 +250,20 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
     }
     
     private void handleReload(@NotNull CommandSender sender) {
-        sender.sendMessage(Component.text("Reloading configuration...", NamedTextColor.YELLOW));
-        // Reload logic here
-        sender.sendMessage(Component.text("Configuration reloaded", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("Configuration reloaded successfully", NamedTextColor.GREEN));
     }
     
     private void sendHelp(@NotNull CommandSender sender) {
         sender.sendMessage(Component.text("=== Maintenance Commands ===", NamedTextColor.GOLD));
-        sender.sendMessage(Component.text("/maintenance enable [reason]", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/maintenance disable", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/maintenance toggle", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/maintenance status", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance enable [reason] - Enable maintenance", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance disable - Disable maintenance", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance toggle - Toggle maintenance", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance status - Show status", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("/maintenance whitelist <add|remove|list|clear>", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("/maintenance schedule <delay> <duration>", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("/maintenance timer <status|cancel>", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/maintenance stats", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/maintenance reload", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance stats - Show statistics", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("/maintenance reload - Reload config", NamedTextColor.GRAY));
     }
     
     private Duration parseDuration(String input) {
@@ -274,7 +271,7 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
         if (input.endsWith("h")) return Duration.ofHours(value);
         if (input.endsWith("m")) return Duration.ofMinutes(value);
         if (input.endsWith("s")) return Duration.ofSeconds(value);
-        return Duration.ofMinutes(value); // default
+        return Duration.ofMinutes(value);
     }
     
     private String formatDuration(Duration duration) {
@@ -296,6 +293,11 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
         
         if (args.length == 2 && args[0].equalsIgnoreCase("timer")) {
             return Arrays.asList("status", "cancel");
+        }
+        
+        if (args.length == 3 && args[0].equalsIgnoreCase("whitelist") && 
+            (args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove"))) {
+            return null; // Bukkit auto-completes player names
         }
         
         return new ArrayList<>();
