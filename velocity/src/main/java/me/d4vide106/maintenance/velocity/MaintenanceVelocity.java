@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.d4vide106.maintenance.api.MaintenanceMode;
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseFactory;
@@ -27,6 +28,10 @@ import java.nio.file.Path;
 /**
  * Main plugin class for Velocity proxy.
  * Also compatible with BungeeCord and Waterfall.
+ * 
+ * @author D4vide106
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Plugin(
     id = "maintenanceuniversal",
@@ -97,8 +102,7 @@ public class MaintenanceVelocity {
             }
             
             // Server identification for Redis
-            String serverName = config.getServerName() != null ? 
-                config.getServerName() : "velocity-proxy";
+            String serverName = "velocity-proxy";
             
             // Initialize managers
             maintenanceManager = new MaintenanceManager(database);
@@ -156,7 +160,7 @@ public class MaintenanceVelocity {
     }
     
     private void registerListeners() {
-        server.getEventManager().register(this, new ConnectionListener(this, apiImpl, config, whitelistManager, database));
+        server.getEventManager().register(this, new ConnectionListener(server, apiImpl, config, whitelistManager, database));
         server.getEventManager().register(this, new ProxyPingListener(apiImpl, config));
     }
     
@@ -165,7 +169,7 @@ public class MaintenanceVelocity {
             server.getCommandManager().metaBuilder("maintenance")
                 .aliases("mt", "maint")
                 .build(),
-            new MaintenanceCommand(this, apiImpl)
+            new MaintenanceCommand(server, apiImpl).createCommand()
         );
     }
     
@@ -173,11 +177,16 @@ public class MaintenanceVelocity {
         // Handle Redis messages for cross-server sync
         switch (message.getType()) {
             case MAINTENANCE_ENABLED:
-                // Will be handled by listeners
+                String modeStr = message.getData().get("mode");
+                MaintenanceMode mode = MaintenanceMode.valueOf(modeStr != null ? modeStr : "GLOBAL");
+                maintenanceManager.enable(
+                    mode,
+                    message.getData().get("reason")
+                );
                 break;
             
             case MAINTENANCE_DISABLED:
-                // Will be handled by listeners
+                maintenanceManager.disable();
                 break;
             
             case WHITELIST_ADDED:
@@ -195,18 +204,21 @@ public class MaintenanceVelocity {
                 }
                 break;
             
-            default:
+            case TIMER_SCHEDULED:
+            case TIMER_CANCELLED:
+                // Timer events handled by TimerManager
                 break;
         }
     }
     
     private void detectProxyType() {
         logger.info("════════════════════════════════════════════════════════════");
-        logger.info("  Proxy Detection");
+        logger.info("  Proxy Platform Detection");
         logger.info("════════════════════════════════════════════════════════════");
         logger.info("  Type: Velocity");
         logger.info("  Version: {}", server.getVersion().getVersion());
         logger.info("  Compatible: Velocity, BungeeCord, Waterfall");
+        logger.info("  Proxy Mode: {}", config != null && config.isProxyMode() ? "Enabled" : "Disabled");
         logger.info("════════════════════════════════════════════════════════════");
     }
     
