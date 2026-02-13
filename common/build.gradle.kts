@@ -2,31 +2,30 @@ plugins {
     `java-library`
 }
 
-val adventureVersion: String by project
-val configurateVersion: String by project
-val hikariVersion: String by project
-val jedisVersion: String by project
-val gsonVersion: String by project
+repositories {
+    mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+}
 
 dependencies {
     // Adventure API (text components)
-    api("net.kyori:adventure-api:$adventureVersion")
-    api("net.kyori:adventure-text-minimessage:$adventureVersion")
-    api("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
-    api("net.kyori:adventure-text-serializer-plain:$adventureVersion")
+    api("net.kyori:adventure-api:4.16.0")
+    api("net.kyori:adventure-text-minimessage:4.16.0")
+    api("net.kyori:adventure-text-serializer-legacy:4.16.0")
+    api("net.kyori:adventure-text-serializer-plain:4.16.0")
     
     // Configurate (YAML configuration)
-    api("org.spongepowered:configurate-yaml:$configurateVersion")
-    api("org.spongepowered:configurate-core:$configurateVersion")
+    api("org.spongepowered:configurate-yaml:4.1.2")
+    api("org.spongepowered:configurate-core:4.1.2")
     
     // HikariCP (database connection pooling)
-    api("com.zaxxer:HikariCP:$hikariVersion")
+    api("com.zaxxer:HikariCP:5.1.0")
     
     // Jedis (Redis client)
-    api("redis.clients:jedis:$jedisVersion")
+    api("redis.clients:jedis:5.1.0")
     
     // Gson (JSON serialization)
-    api("com.google.code.gson:gson:$gsonVersion")
+    api("com.google.code.gson:gson:2.10.1")
     
     // SQLite JDBC driver
     api("org.xerial:sqlite-jdbc:3.44.1.0")
