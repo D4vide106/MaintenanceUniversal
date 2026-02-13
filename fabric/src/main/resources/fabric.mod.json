@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "maintenanceuniversal",
+  "version": "${version}",
+  "name": "MaintenanceUniversal",
+  "description": "Professional maintenance management for Fabric/Quilt servers",
+  "authors": [
+    "D4vide106"
+  ],
+  "contact": {
+    "homepage": "https://github.com/D4vide106/MaintenanceUniversal",
+    "sources": "https://github.com/D4vide106/MaintenanceUniversal",
+    "issues": "https://github.com/D4vide106/MaintenanceUniversal/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/maintenanceuniversal/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "me.d4vide106.maintenance.fabric.MaintenanceFabric"
+    ],
+    "server": [
+      "me.d4vide106.maintenance.fabric.MaintenanceFabric"
+    ]
+  },
+  "mixins": [
+    "maintenanceuniversal.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": ">=1.20",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://github.com/D4vide106/MaintenanceUniversal/discussions"
+      }
+    }
+  }
+}

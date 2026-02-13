@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.d4vide106.maintenance.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ServerLoginNetworkHandlerMixin",
+    "ServerStatusMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
