@@ -32,6 +32,11 @@ subprojects {
     }
 }
 
+// Helper to check if module exists
+fun hasModule(name: String): Boolean {
+    return rootProject.childProjects.containsKey(name)
+}
+
 // ============================================
 // TASK: buildUniversal - Universal JAR
 // ============================================
@@ -49,7 +54,7 @@ tasks.register("buildUniversal") {
         println("")
         println("  🌐 Universal Plugin JAR:")
         println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
-        println("     ✅ Paper + Spigot + Purpur + Folia + Velocity + BungeeCord + Waterfall")
+        println("     ✅ Paper, Spigot, Purpur, Folia, Velocity, BungeeCord, Waterfall")
         println("")
         println("════════════════════════════════════════════════════════════")
     }
@@ -60,16 +65,28 @@ tasks.register("buildUniversal") {
 // ============================================
 tasks.register("buildMods") {
     group = "build"
-    description = "Builds mod JARs (Fabric + Forge/NeoForge)"
+    description = "Builds mod JARs (Fabric + Forge/NeoForge) - if modules are enabled"
     
-    dependsOn(
-        ":fabric:remapJar",
-        ":forge:shadowJar"
-    )
+    val dependencies = mutableListOf<String>()
+    if (hasModule("fabric")) dependencies.add(":fabric:remapJar")
+    if (hasModule("forge")) dependencies.add(":forge:shadowJar")
     
-    doLast {
-        println("✅ Fabric JAR: fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
-        println("✅ Forge JAR: forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+    if (dependencies.isEmpty()) {
+        doLast {
+            println("⚠️  Mod modules are disabled in settings.gradle.kts")
+            println("   To enable, uncomment fabric and forge in settings.gradle.kts")
+        }
+    } else {
+        dependsOn(dependencies)
+        
+        doLast {
+            if (hasModule("fabric")) {
+                println("✅ Fabric JAR: fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+            }
+            if (hasModule("forge")) {
+                println("✅ Forge JAR: forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+            }
+        }
     }
 }
 
@@ -87,9 +104,21 @@ tasks.register("buildPlugins") {
     )
     
     doLast {
-        println("✅ Paper JAR: paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
-        println("✅ Velocity JAR: velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
-        println("✅ BungeeCord JAR: bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
+        println("")
+        println("════════════════════════════════════════════════════════════")
+        println("  ✅ Plugin JARs Built Successfully!")
+        println("════════════════════════════════════════════════════════════")
+        println("")
+        println("  ✅ Paper JAR:")
+        println("     paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
+        println("")
+        println("  ✅ Velocity JAR:")
+        println("     velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
+        println("")
+        println("  ✅ BungeeCord JAR:")
+        println("     bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
+        println("")
+        println("════════════════════════════════════════════════════════════")
     }
 }
 
@@ -98,43 +127,47 @@ tasks.register("buildPlugins") {
 // ============================================
 tasks.register("buildAll") {
     group = "build"
-    description = "Builds ALL JARs (Universal + Plugins + Mods)"
+    description = "Builds ALL available JARs (Plugins + Mods if enabled)"
     
-    dependsOn(
+    val dependencies = mutableListOf(
         ":universal:shadowJar",
         ":paper:shadowJar",
         ":velocity:shadowJar",
-        ":bungee:shadowJar",
-        ":fabric:remapJar",
-        ":forge:shadowJar"
+        ":bungee:shadowJar"
     )
+    
+    if (hasModule("fabric")) dependencies.add(":fabric:remapJar")
+    if (hasModule("forge")) dependencies.add(":forge:shadowJar")
+    
+    dependsOn(dependencies)
     
     doLast {
         println("")
         println("════════════════════════════════════════════════════════════")
-        println("  ✅ ALL JARs Built Successfully!")
+        println("  ✅ All JARs Built Successfully!")
         println("════════════════════════════════════════════════════════════")
         println("")
         println("  🌐 UNIVERSAL JAR (⭐ Recommended):")
         println("     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar")
-        println("     ✅ Paper, Spigot, Purpur, Folia, Velocity, BungeeCord, Waterfall")
         println("")
-        println("  📐 PLUGIN JARs (Individual):")
+        println("  📐 PLUGIN JARs:")
         println("     paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
         println("     velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
         println("     bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
-        println("")
-        println("  🧩 MOD JARs (Modded Minecraft):")
-        println("     fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
-        println("     ✅ Fabric + Quilt")
-        println("")
-        println("     forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
-        println("     ✅ Forge + NeoForge")
+        
+        if (hasModule("fabric") || hasModule("forge")) {
+            println("")
+            println("  🧩 MOD JARs:")
+            if (hasModule("fabric")) {
+                println("     fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+            }
+            if (hasModule("forge")) {
+                println("     forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+            }
+        }
+        
         println("")
         println("════════════════════════════════════════════════════════════")
-        println("")
-        println("  💡 Use Universal JAR for plugins or individual mod JARs for modded!")
-        println("")
     }
 }
 
@@ -175,13 +208,16 @@ tasks.register("cleanAll") {
     group = "build"
     description = "Cleans all build directories"
     
-    dependsOn(
+    val dependencies = mutableListOf(
         ":common:clean",
         ":paper:clean",
         ":velocity:clean",
         ":bungee:clean",
-        ":universal:clean",
-        ":fabric:clean",
-        ":forge:clean"
+        ":universal:clean"
     )
+    
+    if (hasModule("fabric")) dependencies.add(":fabric:clean")
+    if (hasModule("forge")) dependencies.add(":forge:clean")
+    
+    dependsOn(dependencies)
 }
