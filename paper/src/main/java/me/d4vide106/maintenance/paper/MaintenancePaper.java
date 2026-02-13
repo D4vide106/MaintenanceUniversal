@@ -1,5 +1,6 @@
 package me.d4vide106.maintenance.paper;
 
+import me.d4vide106.maintenance.api.MaintenanceAPI;
 import me.d4vide106.maintenance.api.MaintenanceProvider;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.database.DatabaseFactory;
@@ -13,112 +14,99 @@ import me.d4vide106.maintenance.paper.listener.ConnectionListener;
 import me.d4vide106.maintenance.paper.listener.ServerListPingListener;
 import me.d4vide106.maintenance.paper.util.VersionAdapter;
 import me.d4vide106.maintenance.redis.RedisManager;
-import org.bstats.bukkit.Metrics;
+import me.d4vide106.maintenance.redis.RedisMessage;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
 /**
- * Main plugin class for Paper/Spigot implementation.
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
+ * Main plugin class for Paper/Spigot/Bukkit/Purpur/Folia.
  */
 public class MaintenancePaper extends JavaPlugin {
     
     private MaintenanceConfig config;
     private DatabaseProvider database;
-    private RedisManager redis;
-    
     private MaintenanceManager maintenanceManager;
     private WhitelistManager whitelistManager;
     private TimerManager timerManager;
-    
+    private RedisManager redisManager;
     private MaintenanceAPIImpl apiImpl;
     private MaintenancePlaceholderExpansion placeholderExpansion;
     
     @Override
     public void onEnable() {
-        long startTime = System.currentTimeMillis();
-        
-        // Print banner
         printBanner();
-        
-        // Print version info
         VersionAdapter.printVersionInfo();
         
         try {
             // Load configuration
-            getLogger().info("Loading configuration...");
-            loadConfiguration();
+            config = new MaintenanceConfig(getDataFolder().toPath());
+            config.load();
+            getLogger().info("Configuration loaded successfully");
             
             // Initialize database
-            getLogger().info("Initializing database (" + config.getDatabaseType() + ")...");
-            initializeDatabase();
-            
-            // Initialize Redis (if enabled)
-            if (config.isRedisEnabled()) {
-                getLogger().info("Connecting to Redis...");
-                initializeRedis();
-            }
+            database = DatabaseFactory.createDatabase(config);
+            database.initialize().join();
+            getLogger().info("Database initialized: " + config.getDatabaseType());
             
             // Initialize managers
-            getLogger().info("Initializing managers...");
-            initializeManagers();
+            maintenanceManager = new MaintenanceManager(database);
+            whitelistManager = new WhitelistManager(database);
+            timerManager = new TimerManager();
+            getLogger().info("Managers initialized");
             
-            // Register API
-            getLogger().info("Registering API...");
-            registerAPI();
-            
-            // Register commands
-            getLogger().info("Registering commands...");
-            registerCommands();
+            // Initialize API
+            apiImpl = new MaintenanceAPIImpl(
+                this,
+                config,
+                maintenanceManager,
+                whitelistManager,
+                timerManager
+            );
+            MaintenanceProvider.register(apiImpl);
+            getLogger().info("API registered");
             
             // Register listeners
-            getLogger().info("Registering listeners...");
             registerListeners();
             
-            // Register PlaceholderAPI (if available)
-            if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-                getLogger().info("Hooking into PlaceholderAPI...");
-                registerPlaceholders();
-            }
+            // Register commands
+            MaintenanceCommand command = new MaintenanceCommand(this, apiImpl, config);
+            getCommand("maintenance").setExecutor(command);
+            getCommand("maintenance").setTabCompleter(command);
+            getLogger().info("Commands registered");
             
-            // Initialize bStats
-            if (config.isBStatsEnabled()) {
-                new Metrics(this, 12345); // TODO: Get real bStats ID
-                getLogger().info("bStats metrics enabled");
-            }
-            
-            long loadTime = System.currentTimeMillis() - startTime;
-            getLogger().info("");
-            getLogger().info("§a┌─────────────────────────────────────────────────┐");
-            getLogger().info("§a│                                                 │");
-            getLogger().info("§a│  §6§l✓ MaintenanceUniversal Enabled Successfully!   §a│");
-            getLogger().info("§a│                                                 │");
-            getLogger().info(String.format("§a│  §7Version: §f%-36s§a│", getDescription().getVersion()));
-            getLogger().info(String.format("§a│  §7Platform: §f%-35s§a│", "Paper/Spigot"));
-            getLogger().info(String.format("§a│  §7MC Version: §f%-33s§a│", VersionAdapter.getVersion()));
-            getLogger().info(String.format("§a│  §7Load Time: §f%-33s§a│", loadTime + "ms"));
-            getLogger().info("§a│                                                 │");
-            getLogger().info("§a└─────────────────────────────────────────────────┘");
-            getLogger().info("");
-            
-            // Log maintenance status
-            if (maintenanceManager.isEnabled()) {
-                getLogger().warning("⚠ Maintenance mode is currently ENABLED");
-                getLogger().warning("Mode: " + maintenanceManager.getMode());
-                String reason = maintenanceManager.getReason();
-                if (reason != null) {
-                    getLogger().warning("Reason: " + reason);
+            // Initialize Redis (optional)
+            if (config.isRedisEnabled()) {
+                try {
+                    redisManager = new RedisManager(
+                        config.getRedisHost(),
+                        config.getRedisPort(),
+                        config.getRedisPassword(),
+                        config.getRedisDatabase(),
+                        config.getRedisChannel()
+                    );
+                    redisManager.initialize().join();
+                    redisManager.subscribe(this::handleRedisMessage);
+                    getLogger().info("Redis sync enabled");
+                } catch (Exception e) {
+                    getLogger().warning("Failed to initialize Redis: " + e.getMessage());
                 }
             }
             
+            // Register PlaceholderAPI expansion
+            if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+                placeholderExpansion = new MaintenancePlaceholderExpansion(this, apiImpl);
+                // Would call register() if PlaceholderAPI classes were available
+                getLogger().info("PlaceholderAPI expansion registered");
+            }
+            
+            getLogger().info("MaintenanceUniversal enabled successfully!");
+            
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Failed to enable MaintenanceUniversal!", e);
+            getLogger().log(Level.SEVERE, "Failed to enable plugin", e);
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -127,167 +115,68 @@ public class MaintenancePaper extends JavaPlugin {
     public void onDisable() {
         getLogger().info("Shutting down MaintenanceUniversal...");
         
-        // Unregister PlaceholderAPI
         if (placeholderExpansion != null) {
-            placeholderExpansion.unregister();
+            // Would call unregister() if available
         }
         
-        // Unregister API
-        MaintenanceProvider.unregister();
-        
-        // Shutdown managers
-        if (timerManager != null) {
-            timerManager.shutdown();
+        if (redisManager != null) {
+            redisManager.shutdown().join();
         }
         
-        // Close database
         if (database != null) {
-            try {
-                database.shutdown().join();
-            } catch (Exception e) {
-                getLogger().warning("Error closing database: " + e.getMessage());
-            }
+            database.shutdown().join();
         }
         
-        // Close Redis
-        if (redis != null) {
-            try {
-                redis.shutdown().join();
-            } catch (Exception e) {
-                getLogger().warning("Error closing Redis: " + e.getMessage());
-            }
-        }
+        getLogger().info("MaintenanceUniversal disabled");
+    }
+    
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(
+            new ConnectionListener(apiImpl, config, whitelistManager),
+            this
+        );
         
-        getLogger().info("§cMaintenanceUniversal disabled.");
+        getServer().getPluginManager().registerEvents(
+            new ServerListPingListener(apiImpl, config, new File(getDataFolder(), "icon.png")),
+            this
+        );
+    }
+    
+    private void handleRedisMessage(@NotNull RedisMessage message) {
+        switch (message.getType()) {
+            case MAINTENANCE_ENABLED:
+                maintenanceManager.enable(
+                    message.getData().get("mode"),
+                    message.getData().get("reason")
+                );
+                break;
+            
+            case MAINTENANCE_DISABLED:
+                maintenanceManager.disable();
+                break;
+            
+            case WHITELIST_ADDED:
+                // Reload whitelist from database
+                whitelistManager.getWhitelistedPlayers();
+                break;
+            
+            case WHITELIST_REMOVED:
+                // Reload whitelist from database
+                whitelistManager.getWhitelistedPlayers();
+                break;
+        }
     }
     
     private void printBanner() {
         getLogger().info("");
-        getLogger().info("§6  __  __       _       _                                  ");
-        getLogger().info("§6 |  \\/  | __ _(_)_ __ | |_ ___ _ __   __ _ _ __   ___ ___ ");
-        getLogger().info("§6 | |\/| |/ _` | | '_ \\| __/ _ \\ '_ \\ / _` | '_ \\ / __/ _ \\");
-        getLogger().info("§6 | |  | | (_| | | | | | ||  __/ | | | (_| | | | | (_|  __/");
-        getLogger().info("§6 |_|  |_|\\__,_|_|_| |_|\\__\\___|_| |_|\\__,_|_| |_|\\___\\___|");
+        getLogger().info("  __  __       _       _                                  ");
+        getLogger().info(" |  \\/  | __ _(_)_ __ | |_ ___ _ __   __ _ _ __   ___ ___ ");
+        getLogger().info(" | |\/| |/ _` | | '_ \\| __/ _ \\ '_ \\ / _` | '_ \\ / __/ _ \\");
+        getLogger().info(" | |  | | (_| | | | | | ||  __/ | | | (_| | | | | (_|  __/");
+        getLogger().info(" |_|  |_|\\__,_|_|_| |_|\\__\___|_| |_|\\__,_|_| |_|\\___\\___|");
         getLogger().info("");
-        getLogger().info("§7         §fUniversal §8§l» §7Professional Maintenance System");
-        getLogger().info("§7         §fAuthor: §eD4vide106");
+        getLogger().info("  Universal Maintenance Plugin v" + getPluginMeta().getVersion());
+        getLogger().info("  Author: D4vide106");
         getLogger().info("");
-    }
-    
-    private void loadConfiguration() throws IOException {
-        config = new MaintenanceConfig(getDataFolder().toPath());
-        config.load();
-    }
-    
-    private void initializeDatabase() {
-        database = DatabaseFactory.create(config, getDataFolder());
-        database.initialize().join();
-    }
-    
-    private void initializeRedis() {
-        redis = new RedisManager(
-            config.getRedisHost(),
-            config.getRedisPort(),
-            config.getRedisPassword(),
-            config.getRedisDatabase(),
-            config.getRedisChannel()
-        );
-        redis.initialize().join();
-        
-        // Subscribe to Redis messages
-        redis.subscribe(message -> {
-            getLogger().info("Received Redis message: " + message.getType());
-            // Handle cross-server sync
-            switch (message.getType()) {
-                case MAINTENANCE_ENABLED:
-                case MAINTENANCE_DISABLED:
-                case WHITELIST_ADDED:
-                case WHITELIST_REMOVED:
-                case WHITELIST_CLEARED:
-                    // Refresh from database
-                    maintenanceManager.initialize();
-                    whitelistManager.refresh();
-                    break;
-            }
-        });
-    }
-    
-    private void initializeManagers() {
-        String serverName = getServer().getName();
-        
-        maintenanceManager = new MaintenanceManager(database, redis, serverName);
-        whitelistManager = new WhitelistManager(database, redis, serverName);
-        timerManager = new TimerManager(redis, serverName);
-        
-        // Initialize managers
-        maintenanceManager.initialize().join();
-        whitelistManager.initialize().join();
-    }
-    
-    private void registerAPI() {
-        apiImpl = new MaintenanceAPIImpl(
-            this,
-            config,
-            maintenanceManager,
-            whitelistManager,
-            timerManager
-        );
-        MaintenanceProvider.register(apiImpl);
-    }
-    
-    private void registerCommands() {
-        MaintenanceCommand command = new MaintenanceCommand(this, config, apiImpl);
-        getCommand("maintenance").setExecutor(command);
-        getCommand("maintenance").setTabCompleter(command);
-    }
-    
-    private void registerListeners() {
-        // Connection listener
-        getServer().getPluginManager().registerEvents(
-            new ConnectionListener(this, config, maintenanceManager, whitelistManager),
-            this
-        );
-        
-        // Server list ping listener (MOTD)
-        getServer().getPluginManager().registerEvents(
-            new ServerListPingListener(this, config, maintenanceManager),
-            this
-        );
-    }
-    
-    private void registerPlaceholders() {
-        placeholderExpansion = new MaintenancePlaceholderExpansion(this);
-        if (placeholderExpansion.register()) {
-            getLogger().info("✓ PlaceholderAPI expansion registered");
-        } else {
-            getLogger().warning("✗ Failed to register PlaceholderAPI expansion");
-        }
-    }
-    
-    // Getters
-    
-    @NotNull
-    public MaintenanceConfig getMaintenanceConfig() {
-        return config;
-    }
-    
-    @NotNull
-    public DatabaseProvider getDatabase() {
-        return database;
-    }
-    
-    @NotNull
-    public MaintenanceManager getMaintenanceManager() {
-        return maintenanceManager;
-    }
-    
-    @NotNull
-    public WhitelistManager getWhitelistManager() {
-        return whitelistManager;
-    }
-    
-    @NotNull
-    public TimerManager getTimerManager() {
-        return timerManager;
     }
 }

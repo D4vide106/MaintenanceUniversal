@@ -3,18 +3,10 @@ package me.d4vide106.maintenance.database;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
-import java.util.Objects;
-
 /**
- * Represents a completed maintenance session stored in history.
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
+ * Represents a historical maintenance session.
  */
 public class MaintenanceSession {
-    
     private final int id;
     private final long startTime;
     private final long endTime;
@@ -35,7 +27,7 @@ public class MaintenanceSession {
         this.id = id;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.mode = Objects.requireNonNull(mode);
+        this.mode = mode;
         this.reason = reason;
         this.startedBy = startedBy;
         this.playersKicked = playersKicked;
@@ -51,10 +43,6 @@ public class MaintenanceSession {
     
     public long getEndTime() {
         return endTime;
-    }
-    
-    public Duration getDuration() {
-        return Duration.ofMillis(endTime - startTime);
     }
     
     @NotNull
@@ -76,13 +64,7 @@ public class MaintenanceSession {
         return playersKicked;
     }
     
-    @Override
-    public String toString() {
-        return "MaintenanceSession{" +
-               "id=" + id +
-               ", duration=" + getDuration() +
-               ", mode='" + mode + '\'' +
-               ", playersKicked=" + playersKicked +
-               '}';
+    public long getDuration() {
+        return endTime - startTime;
     }
 }

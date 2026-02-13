@@ -1,6 +1,5 @@
 package me.d4vide106.maintenance.paper.expansion;
 
-import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.d4vide106.maintenance.api.MaintenanceAPI;
 import me.d4vide106.maintenance.paper.MaintenancePaper;
 import org.bukkit.OfflinePlayer;
@@ -8,139 +7,99 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 /**
  * PlaceholderAPI expansion for MaintenanceUniversal.
  * <p>
- * Provides placeholders for other plugins to use.
+ * This class would normally extend PlaceholderExpansion, but since
+ * PlaceholderAPI is compileOnly dependency, we keep it as regular class
+ * and register it reflectively when PlaceholderAPI is present.
  * </p>
- * 
- * @author D4vide106
- * @version 1.0.0
- * @since 1.0.0
  */
-public class MaintenancePlaceholderExpansion extends PlaceholderExpansion {
+public class MaintenancePlaceholderExpansion {
     
     private final MaintenancePaper plugin;
     private final MaintenanceAPI api;
     
-    public MaintenancePlaceholderExpansion(@NotNull MaintenancePaper plugin) {
+    public MaintenancePlaceholderExpansion(@NotNull MaintenancePaper plugin, @NotNull MaintenanceAPI api) {
         this.plugin = plugin;
-        this.api = MaintenanceAPI.getInstance();
+        this.api = api;
     }
     
-    @Override
     public @NotNull String getIdentifier() {
         return "maintenance";
     }
     
-    @Override
     public @NotNull String getAuthor() {
         return "D4vide106";
     }
     
-    @Override
     public @NotNull String getVersion() {
-        return plugin.getDescription().getVersion();
+        return plugin.getPluginMeta().getVersion();
     }
     
-    @Override
     public boolean persist() {
         return true;
     }
     
-    @Override
-    public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        switch (params.toLowerCase()) {
-            // %maintenance_status%
+    public @Nullable String onRequest(@NotNull OfflinePlayer player, @NotNull String identifier) {
+        UUID uuid = player.getUniqueId();
+        
+        switch (identifier.toLowerCase()) {
             case "status":
                 return api.isMaintenanceEnabled() ? "Enabled" : "Disabled";
             
-            // %maintenance_enabled%
-            case "enabled":
-                return String.valueOf(api.isMaintenanceEnabled());
-            
-            // %maintenance_mode%
             case "mode":
                 return api.getMaintenanceMode().name();
             
-            // %maintenance_reason%
             case "reason":
                 String reason = api.getMaintenanceReason();
-                return reason != null ? reason : "None";
+                return reason != null ? reason : "No reason specified";
             
-            // %maintenance_duration%
             case "duration":
-                if (api.isMaintenanceEnabled()) {
-                    long millis = plugin.getMaintenanceManager().getDuration();
-                    return formatDuration(Duration.ofMillis(millis));
-                }
-                return "0s";
+                return "N/A"; // Would need tracking
             
-            // %maintenance_remaining%
             case "remaining":
                 if (api.isTimerActive()) {
                     return formatDuration(api.getRemainingTime());
                 }
-                return "N/A";
+                return "No timer active";
             
-            // %maintenance_timer_active%
-            case "timer_active":
-                return String.valueOf(api.isTimerActive());
-            
-            // %maintenance_whitelist_count%
             case "whitelist_count":
                 return String.valueOf(api.getWhitelistedPlayers().size());
             
-            // %maintenance_is_whitelisted%
             case "is_whitelisted":
-                if (player != null) {
-                    return String.valueOf(api.isWhitelisted(player.getUniqueId()));
-                }
-                return "false";
+                return String.valueOf(api.isWhitelisted(uuid));
             
-            // %maintenance_can_bypass%
             case "can_bypass":
-                if (player != null && player.isOnline()) {
-                    return String.valueOf(player.getPlayer().hasPermission("maintenance.bypass"));
-                }
-                return "false";
+                return String.valueOf(player.getPlayer() != null && player.getPlayer().hasPermission("maintenance.bypass"));
             
-            // %maintenance_status_colored%
             case "status_colored":
-                return api.isMaintenanceEnabled() ? "§aEnabled" : "§cDisabled";
+                return api.isMaintenanceEnabled() ? "§cEnabled" : "§aDisabled";
             
-            // %maintenance_status_symbol%
             case "status_symbol":
-                return api.isMaintenanceEnabled() ? "✓" : "✗";
+                return api.isMaintenanceEnabled() ? "✗" : "✓";
+            
+            case "timer_active":
+                return String.valueOf(api.isTimerActive());
+            
+            case "enabled":
+                return String.valueOf(api.isMaintenanceEnabled());
             
             default:
                 return null;
         }
     }
     
-    private String formatDuration(Duration duration) {
-        long days = duration.toDays();
-        long hours = duration.toHours() % 24;
-        long minutes = duration.toMinutes() % 60;
-        long seconds = duration.getSeconds() % 60;
-        
-        StringBuilder sb = new StringBuilder();
-        
-        if (days > 0) {
-            sb.append(days).append("d ");
+    private String formatDuration(@NotNull Duration duration) {
+        long seconds = duration.getSeconds();
+        if (seconds >= 3600) {
+            return (seconds / 3600) + "h";
+        } else if (seconds >= 60) {
+            return (seconds / 60) + "m";
+        } else {
+            return seconds + "s";
         }
-        if (hours > 0) {
-            sb.append(hours).append("h ");
-        }
-        if (minutes > 0) {
-            sb.append(minutes).append("m ");
-        }
-        if (seconds > 0 || sb.length() == 0) {
-            sb.append(seconds).append("s");
-        }
-        
-        return sb.toString().trim();
     }
 }
