@@ -3,6 +3,8 @@ package me.d4vide106.maintenance.paper.util;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.logging.Logger;
+
 /**
  * Utility for detecting and adapting to different Minecraft versions and platforms.
  * 
@@ -207,23 +209,32 @@ public class VersionAdapter {
     }
     
     /**
-     * Prints version information to console.
+     * Prints version information to console using provided logger.
      */
+    public static void printVersionInfo(@NotNull Logger logger) {
+        logger.info("════════════════════════════════════════════════════════════");
+        logger.info("  Platform Detection & Version Information");
+        logger.info("════════════════════════════════════════════════════════════");
+        logger.info("  Platform: " + PLATFORM.getName());
+        logger.info("  Version: " + VERSION);
+        logger.info("  Major: " + MAJOR_VERSION);
+        logger.info("  Minor: " + MINOR_VERSION);
+        logger.info("  Patch: " + PATCH_VERSION);
+        logger.info("  Tier: " + getVersionTier());
+        logger.info("  Modern API: " + isModern());
+        logger.info("  Adventure API: " + supportsAdventure());
+        logger.info("  Legacy Mode: " + isLegacy());
+        logger.info("  Folia Support: " + isFolia());
+        logger.info("  Paper-based: " + isPaperBased());
+        logger.info("════════════════════════════════════════════════════════════");
+    }
+    
+    /**
+     * Prints version information to console (deprecated).
+     * @deprecated Use {@link #printVersionInfo(Logger)} instead
+     */
+    @Deprecated
     public static void printVersionInfo() {
-        System.out.println("═════════════════════════════════════════════════════");
-        System.out.println("  Minecraft Version & Platform Detection");
-        System.out.println("═════════════════════════════════════════════════════");
-        System.out.println("  Platform: " + PLATFORM.getName());
-        System.out.println("  Version: " + VERSION);
-        System.out.println("  Major: " + MAJOR_VERSION);
-        System.out.println("  Minor: " + MINOR_VERSION);
-        System.out.println("  Patch: " + PATCH_VERSION);
-        System.out.println("  Tier: " + getVersionTier());
-        System.out.println("  Modern: " + isModern());
-        System.out.println("  Adventure: " + supportsAdventure());
-        System.out.println("  Legacy: " + isLegacy());
-        System.out.println("  Folia: " + isFolia());
-        System.out.println("  Paper-based: " + isPaperBased());
-        System.out.println("═════════════════════════════════════════════════════");
+        printVersionInfo(Logger.getLogger("MaintenanceUniversal"));
     }
 }

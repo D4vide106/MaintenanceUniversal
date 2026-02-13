@@ -39,7 +39,7 @@ public class MaintenancePaper extends JavaPlugin {
     @Override
     public void onEnable() {
         printBanner();
-        VersionAdapter.printVersionInfo();
+        VersionAdapter.printVersionInfo(getLogger());
         
         try {
             // Load configuration
@@ -109,7 +109,9 @@ public class MaintenancePaper extends JavaPlugin {
                 getLogger().info("PlaceholderAPI expansion registered");
             }
             
-            getLogger().info("MaintenanceUniversal enabled successfully!");
+            getLogger().info("════════════════════════════════════════════════════════════");
+            getLogger().info("  ✅ MaintenanceUniversal v" + getPluginMeta().getVersion() + " enabled successfully!");
+            getLogger().info("════════════════════════════════════════════════════════════");
             
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Failed to enable plugin", e);
