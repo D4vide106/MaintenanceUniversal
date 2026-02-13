@@ -1,0 +1,6 @@
+name: MaintenanceUniversal
+version: 1.0.0
+main: me.d4vide106.maintenance.bungee.MaintenanceBungee
+author: D4vide106
+description: Professional maintenance management for BungeeCord/Waterfall proxies
+website: https://github.com/D4vide106/MaintenanceUniversal
