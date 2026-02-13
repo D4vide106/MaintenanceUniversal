@@ -1,28 +1,20 @@
 package me.d4vide106.maintenance.manager;
 
-import me.d4vide106.maintenance.redis.RedisManager;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TimerManager {
     
-    private final RedisManager redis;
-    private final String serverName;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    
     private final AtomicBoolean active = new AtomicBoolean(false);
     private final AtomicLong endTime = new AtomicLong(0);
     private ScheduledFuture<?> currentTask;
     
-    public TimerManager(@Nullable RedisManager redis, @NotNull String serverName) {
-        this.redis = redis;
-        this.serverName = serverName;
+    public TimerManager() {
     }
     
     public CompletableFuture<Void> schedule(

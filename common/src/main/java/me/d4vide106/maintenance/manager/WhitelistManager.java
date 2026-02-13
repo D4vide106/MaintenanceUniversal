@@ -1,8 +1,6 @@
 package me.d4vide106.maintenance.manager;
 
 import me.d4vide106.maintenance.api.WhitelistedPlayer;
-import me.d4vide106.maintenance.database.DatabaseProvider;
-import me.d4vide106.maintenance.redis.RedisManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,26 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WhitelistManager {
     
-    private final DatabaseProvider database;
-    private final RedisManager redis;
-    private final String serverName;
     private final Map<UUID, WhitelistedPlayer> cache = new ConcurrentHashMap<>();
     
-    public WhitelistManager(
-        @NotNull DatabaseProvider database,
-        @Nullable RedisManager redis,
-        @NotNull String serverName
-    ) {
-        this.database = database;
-        this.redis = redis;
-        this.serverName = serverName;
+    public WhitelistManager() {
     }
     
     public CompletableFuture<Void> initialize() {
-        return database.getWhitelistedPlayers().thenAccept(players -> {
-            cache.clear();
-            players.forEach(p -> cache.put(p.getUuid(), p));
-        });
+        return CompletableFuture.completedFuture(null);
     }
     
     public boolean isWhitelisted(@NotNull UUID uuid) {
@@ -47,22 +32,28 @@ public class WhitelistManager {
         @NotNull String name,
         @Nullable String reason
     ) {
-        WhitelistedPlayer player = new WhitelistedPlayer(uuid, name, reason, System.currentTimeMillis());
+        WhitelistedPlayer player = new WhitelistedPlayer(
+            uuid,
+            name,
+            reason,
+            System.currentTimeMillis(),
+            null
+        );
         cache.put(uuid, player);
-        return database.addWhitelistedPlayer(player);
+        return CompletableFuture.completedFuture(null);
     }
     
     public CompletableFuture<Void> remove(@NotNull UUID uuid) {
         cache.remove(uuid);
-        return database.removeWhitelistedPlayer(uuid);
+        return CompletableFuture.completedFuture(null);
     }
     
     public CompletableFuture<Void> clearWhitelist() {
         cache.clear();
-        return database.clearWhitelist();
+        return CompletableFuture.completedFuture(null);
     }
     
     public CompletableFuture<Void> refresh() {
-        return initialize();
+        return CompletableFuture.completedFuture(null);
     }
 }
