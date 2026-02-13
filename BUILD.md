@@ -1,11 +1,94 @@
 # 🔨 Build Guide - MaintenanceUniversal
 
-## 📦 Completed Modules
+## 🌟 NEW: Universal JAR System
 
-### ✅ Ready to Build
+**One JAR to rule them all!** ✨
+
+The Universal JAR automatically detects your platform (Paper, Spigot, Velocity, BungeeCord, etc.) and loads the correct implementation.
+
+### 🎯 Choose Your Build Strategy
+
+| Build | JARs | Size | Use Case |
+|-------|------|------|----------|
+| **Universal** (⭐ Recommended) | 1 JAR | ~6 MB | Simplicity, works everywhere |
+| **Individual** | 3 JARs | ~2-3 MB each | Smaller size, specific platforms |
+| **All** | 4 JARs | Universal + 3 singles | Best of both worlds |
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Universal JAR (Recommended) ⭐
+
+```bash
+./gradlew buildUniversal
+```
+
+**Output:**
+```
+📦 universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar
+```
+
+**Works on:**
+- ✅ Paper 1.13-1.21+
+- ✅ Spigot 1.13-1.21+
+- ✅ Purpur 1.13-1.21+
+- ✅ Folia 1.19.4+
+- ✅ Velocity 3.0+
+- ✅ BungeeCord (latest)
+- ✅ Waterfall (all versions)
+
+**How it works:**
+1. Copy JAR to `plugins/` folder
+2. Start server/proxy
+3. Plugin auto-detects platform
+4. Loads correct implementation
+5. ✨ Magic!
+
+---
+
+### Option 2: Individual JARs (Smaller Size)
+
+```bash
+# Server only
+./gradlew buildServer
+
+# Proxy only  
+./gradlew buildProxy
+```
+
+**Output:**
+```
+📦 paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar (~2.5 MB)
+📦 velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar (~2.2 MB)
+📦 bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar (~2.3 MB)
+```
+
+---
+
+### Option 3: Everything (Universal + Singles)
+
+```bash
+./gradlew buildAll
+```
+
+**Output:**
+```
+📦 universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar
+📦 paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar
+📦 velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar
+📦 bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar
+```
+
+---
+
+## 📦 Module Status
+
+### ✅ Complete & Ready
 
 | Module | Status | Platforms | JAR Output |
 |--------|:------:|-----------|------------|
+| **Universal** | ✅ Complete | ALL platforms | `MaintenanceUniversal-Universal-1.0.0.jar` |
 | **Paper** | ✅ Complete | Paper, Spigot, Purpur, Folia, CraftBukkit | `MaintenanceUniversal-Paper-1.0.0.jar` |
 | **Velocity** | ✅ Complete | Velocity 3.0+ | `MaintenanceUniversal-Velocity-1.0.0.jar` |
 | **BungeeCord** | ✅ Complete | BungeeCord, Waterfall | `MaintenanceUniversal-BungeeCord-1.0.0.jar` |
@@ -19,271 +102,301 @@
 
 ---
 
-## 🚀 Quick Start
+## 🎯 Universal JAR Deep Dive
 
-### Requirements
+### How Auto-Detection Works
 
-- **Java 17+** (JDK)
-- **Gradle 8.0+** (included via wrapper)
-- **Git** (for cloning)
-
-### Build All Modules
-
-```bash
-# Clone repository
-git clone https://github.com/D4vide106/MaintenanceUniversal.git
-cd MaintenanceUniversal
-
-# Build everything
-./gradlew buildAll
+```java
+1. Plugin loads
+2. PlatformDetector scans classpath:
+   - Found Paper API? → Load Paper implementation
+   - Found Velocity API? → Load Velocity implementation
+   - Found BungeeCord API? → Load BungeeCord implementation
+3. Correct platform loaded automatically
+4. Single JAR, multiple platforms!
 ```
 
-**Output:**
+### Detection Order (Most Specific First)
+
+1. **Paper** - `io.papermc.paper.configuration.Configuration`
+2. **Spigot** - `org.spigotmc.SpigotConfig`
+3. **Bukkit** - `org.bukkit.Bukkit` (CraftBukkit, etc.)
+4. **Velocity** - `com.velocitypowered.api.proxy.ProxyServer`
+5. **BungeeCord** - `net.md_5.bungee.api.ProxyServer` (+ Waterfall)
+
+### Included Implementations
+
 ```
-📦 paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar
-📦 velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar
-📦 bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar
+Universal JAR Contents:
+├── Common module (shared code)
+├── Paper implementation
+├── Velocity implementation
+├── BungeeCord implementation
+├── PlatformDetector (bootstrap)
+└── All plugin descriptors:
+    ├── plugin.yml (Bukkit)
+    ├── velocity-plugin.json (Velocity)
+    └── bungee.yml (BungeeCord)
 ```
 
 ---
 
-## 🎯 Build Specific Modules
+## 📊 JAR Comparison
 
-### Server Module (Paper)
+### Universal JAR
+
+**Pros:**
+- ✅ One file for all platforms
+- ✅ Auto-detection
+- ✅ Simplified deployment
+- ✅ No confusion about which JAR
+- ✅ Future-proof
+
+**Cons:**
+- ⚠️ Larger file size (~6 MB)
+- ⚠️ Includes unused platform code
+
+**Best for:**
+- Networks with mixed platforms
+- Easy deployment
+- Users who want simplicity
+
+---
+
+### Individual JARs
+
+**Pros:**
+- ✅ Smaller size (~2-3 MB each)
+- ✅ Only includes needed code
+- ✅ Faster loading
+
+**Cons:**
+- ⚠️ Must choose correct JAR
+- ⚠️ Multiple files to manage
+
+**Best for:**
+- Single platform setup
+- Minimal file size
+- Advanced users
+
+---
+
+## 🔧 Build Commands Reference
+
+### Main Commands
+
+| Command | Output | Use Case |
+|---------|--------|----------|
+| `./gradlew buildUniversal` | 1 Universal JAR | ⭐ Recommended |
+| `./gradlew buildAll` | Universal + 3 singles | Release builds |
+| `./gradlew buildServer` | Paper JAR | Server only |
+| `./gradlew buildProxy` | Velocity + Bungee | Proxy only |
+
+### Maintenance Commands
+
+| Command | Description |
+|---------|-------------|
+| `./gradlew cleanAll` | Clean all build directories |
+| `./gradlew :universal:shadowJar` | Build only Universal |
+| `./gradlew :paper:shadowJar` | Build only Paper |
+| `./gradlew :velocity:shadowJar` | Build only Velocity |
+| `./gradlew :bungee:shadowJar` | Build only BungeeCord |
+
+---
+
+## 🎨 Example Build Output
 
 ```bash
+$ ./gradlew buildUniversal
+
+> Task :common:compileJava
+> Task :paper:compileJava
+> Task :velocity:compileJava
+> Task :bungee:compileJava
+> Task :universal:shadowJar
+
+════════════════════════════════════════════════════════════
+  ✅ Universal JAR Built!
+════════════════════════════════════════════════════════════
+
+  🌐 Universal JAR (ALL platforms):
+     universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar
+
+  ✅ Works on:
+     - Paper 1.13+
+     - Spigot 1.13+
+     - Purpur 1.13+
+     - Folia 1.19.4+
+     - Velocity 3.0+
+     - BungeeCord (latest)
+     - Waterfall (all versions)
+
+  💡 Auto-detects platform and loads correct implementation!
+
+════════════════════════════════════════════════════════════
+
+BUILD SUCCESSFUL in 24s
+```
+
+---
+
+## 🧪 Testing Universal JAR
+
+### Test on Paper
+
+```bash
+# Copy to Paper server
+cp universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar \
+   ~/servers/paper/plugins/
+
+# Start server
+cd ~/servers/paper
+java -jar paper.jar
+
+# Check logs:
+# [MaintenanceUniversal] Platform: Paper
+# [MaintenanceUniversal] ✅ Loaded Paper implementation
+```
+
+### Test on Velocity
+
+```bash
+# Copy to Velocity proxy
+cp universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar \
+   ~/proxies/velocity/plugins/
+
+# Start proxy
+cd ~/proxies/velocity
+java -jar velocity.jar
+
+# Check logs:
+# [MaintenanceUniversal] Platform: Velocity
+# [MaintenanceUniversal] ✅ Loaded Velocity implementation
+```
+
+### Test on BungeeCord
+
+```bash
+# Copy to BungeeCord proxy
+cp universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar \
+   ~/proxies/bungee/plugins/
+
+# Start proxy
+cd ~/proxies/bungee
+java -jar BungeeCord.jar
+
+# Check logs:
+# [MaintenanceUniversal] Platform: BungeeCord
+# [MaintenanceUniversal] ✅ Loaded BungeeCord implementation
+```
+
+---
+
+## 🐛 Troubleshooting Universal JAR
+
+### "Unsupported platform detected"
+
+**Cause:** Platform not recognized  
+**Fix:** Make sure you're using Paper/Spigot/Velocity/BungeeCord
+
+```bash
+# Check server version
+java -jar server.jar --version
+```
+
+---
+
+### "Failed to load platform implementation"
+
+**Cause:** Missing dependencies or corrupted JAR  
+**Fix:** Rebuild and re-download
+
+```bash
+./gradlew cleanAll
+./gradlew buildUniversal
+```
+
+---
+
+### JAR too large
+
+**Cause:** Universal JAR includes all platforms  
+**Solution:** Use individual JARs instead
+
+```bash
+# For Paper servers
 ./gradlew buildServer
-```
 
-**Compatible with:**
-- ✅ Paper 1.13-1.21+
-- ✅ Spigot 1.13-1.21+
-- ✅ Purpur 1.13-1.21+
-- ✅ Folia 1.19.4+
-- ⚠️ CraftBukkit 1.13+ (limited features)
-
----
-
-### Proxy Modules (Velocity + BungeeCord)
-
-```bash
+# For Velocity/BungeeCord proxies
 ./gradlew buildProxy
 ```
 
-**Velocity JAR compatible with:**
-- ✅ Velocity 3.0.0+
+---
 
-**BungeeCord JAR compatible with:**
-- ✅ BungeeCord (latest builds)
-- ✅ Waterfall (all versions)
+## 📈 Build Statistics
+
+### File Sizes
+
+| JAR | Size | Platforms Included |
+|-----|------|-------------------|
+| **Universal** | ~6.0 MB | Paper + Velocity + BungeeCord |
+| **Paper** | ~2.5 MB | Paper only |
+| **Velocity** | ~2.2 MB | Velocity only |
+| **BungeeCord** | ~2.3 MB | BungeeCord only |
+
+### Build Times (Approximate)
+
+| Command | Duration | Output |
+|---------|----------|--------|
+| `buildUniversal` | ~35s | 1 JAR |
+| `buildAll` | ~45s | 4 JARs |
+| `buildServer` | ~15s | 1 JAR |
+| `buildProxy` | ~20s | 2 JARs |
 
 ---
 
-## 📋 Module Details
+## 🎯 Recommendation
 
-### Paper Module
+### For Most Users: Universal JAR ⭐
 
-**Build:**
 ```bash
-./gradlew :paper:shadowJar
+./gradlew buildUniversal
 ```
 
-**Features:**
-- 🔐 Maintenance mode with whitelist
-- 🎨 Custom MOTD via ProtocolLib (optional)
-- 📊 PlaceholderAPI support (optional)
-- ⏰ Timer system with scheduling
-- 🔄 Redis multi-server sync
-- 📈 Statistics tracking
-- 🌐 Folia regionized threading support
-
-**Location:** `paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar`
+**Why?**
+- ✅ Works everywhere
+- ✅ No confusion
+- ✅ Future-proof
+- ✅ Easy deployment
+- ⚠️ Slightly larger (~6 MB vs 2-3 MB)
 
 ---
 
-### Velocity Module
-
-**Build:**
-```bash
-./gradlew :velocity:shadowJar
-```
-
-**Features:**
-- 🌐 Proxy-level maintenance
-- 🔄 Redis multi-proxy sync
-- 🎯 Fallback server support
-- 🎨 Custom MOTD (native API)
-- 🔐 Permission-based bypass
-- 📊 Statistics tracking
-
-**Location:** `velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar`
-
----
-
-### BungeeCord Module
-
-**Build:**
-```bash
-./gradlew :bungee:shadowJar
-```
-
-**Features:**
-- 🌐 Proxy-level maintenance
-- 🔄 Redis multi-proxy sync
-- 🎯 Fallback server support
-- 🎨 Custom MOTD (Adventure platform)
-- 🔐 Permission-based bypass
-- 📊 Statistics tracking
-
-**Location:** `bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar`
-
----
-
-## 🔧 Advanced Build Options
-
-### Clean Build
+### For Advanced Users: Individual JARs
 
 ```bash
-# Clean all modules
-./gradlew cleanAll
-
-# Clean specific module
-./gradlew :paper:clean
-./gradlew :velocity:clean
-./gradlew :bungee:clean
-```
-
----
-
-### Build Without Tests
-
-```bash
-./gradlew buildAll -x test
-```
-
----
-
-### Build with Debug Info
-
-```bash
-./gradlew buildAll --info
-```
-
----
-
-### Build Common Module
-
-```bash
-./gradlew :common:build
-```
-
-The common module contains shared code used by all platforms.
-
----
-
-## 📊 Module Compatibility Matrix
-
-### Paper JAR
-
-| Platform | Version | Features | Status |
-|----------|---------|----------|:------:|
-| Paper | 1.13-1.21+ | Full | ✅ |
-| Spigot | 1.13-1.21+ | Full (no Adventure native) | ✅ |
-| Purpur | 1.13-1.21+ | Full + Purpur extras | ✅ |
-| Folia | 1.19.4+ | Full + regionized | ✅ |
-| CraftBukkit | 1.13-1.21+ | Basic (limited API) | ⚠️ |
-
-### Velocity JAR
-
-| Platform | Version | Features | Status |
-|----------|---------|----------|:------:|
-| Velocity | 3.0.0+ | Full | ✅ |
-
-### BungeeCord JAR
-
-| Platform | Version | Features | Status |
-|----------|---------|----------|:------:|
-| BungeeCord | Latest | Full | ✅ |
-| Waterfall | All | Full | ✅ |
-
----
-
-## 🐛 Troubleshooting
-
-### Gradle Daemon Issues
-
-```bash
-./gradlew --stop
 ./gradlew buildAll
 ```
 
-### Permission Denied
-
-```bash
-chmod +x gradlew
-./gradlew buildAll
-```
-
-### Java Version Issues
-
-```bash
-# Check Java version
-java -version
-
-# Should be 17 or higher
-# Download from: https://adoptium.net/
-```
-
-### Build Failures
-
-```bash
-# Clean and rebuild
-./gradlew cleanAll
-./gradlew buildAll --refresh-dependencies
-```
+**Use individual JARs when:**
+- You know your exact platform
+- File size matters
+- You want minimal overhead
 
 ---
 
-## 📦 Dependency Information
+## 🚀 CI/CD with Universal JAR
 
-### Common Dependencies (All Modules)
-
-- **Configurate** 4.1.2 - YAML configuration
-- **Jedis** 5.1.0 - Redis client
-- **HikariCP** 5.1.0 - Connection pooling
-- **SQLite JDBC** 3.45.1.0 - SQLite database
-
-### Paper-Specific
-
-- **Paper API** 1.20.4-R0.1-SNAPSHOT
-- **Adventure API** (included in Paper)
-- **PlaceholderAPI** 2.11.6 (optional, runtime)
-- **ProtocolLib** 5.4.0 (optional, runtime)
-
-### Velocity-Specific
-
-- **Velocity API** 3.3.0-SNAPSHOT
-- **Adventure API** 4.16.0 (included in Velocity)
-
-### BungeeCord-Specific
-
-- **BungeeCord API** 1.20-R0.2
-- **Adventure Platform BungeeCord** 4.3.2
-
----
-
-## 🚀 CI/CD Integration
-
-### GitHub Actions Example
+### GitHub Actions
 
 ```yaml
-name: Build
+name: Build Universal
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [ created ]
 
 jobs:
   build:
@@ -298,66 +411,28 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     
-    - name: Build with Gradle
-      run: ./gradlew buildAll
+    - name: Build Universal JAR
+      run: ./gradlew buildUniversal
     
-    - name: Upload artifacts
+    - name: Upload Universal JAR
       uses: actions/upload-artifact@v4
       with:
-        name: plugins
-        path: |
-          paper/build/libs/*.jar
-          velocity/build/libs/*.jar
-          bungee/build/libs/*.jar
+        name: MaintenanceUniversal-Universal
+        path: universal/build/libs/MaintenanceUniversal-Universal-1.0.0.jar
 ```
 
 ---
 
-## 📈 Build Statistics
+## 📚 Additional Resources
 
-### Average Build Times
-
-| Command | Duration | Output |
-|---------|----------|--------|
-| `./gradlew buildAll` | ~30s | 3 JARs |
-| `./gradlew buildServer` | ~15s | 1 JAR |
-| `./gradlew buildProxy` | ~20s | 2 JARs |
-| `./gradlew cleanAll buildAll` | ~45s | 3 JARs |
-
-### JAR Sizes (Approximate)
-
-| JAR | Size | Dependencies Included |
-|-----|------|----------------------|
-| Paper | ~2.5 MB | Common + Paper platform |
-| Velocity | ~2.2 MB | Common + Velocity platform |
-| BungeeCord | ~2.3 MB | Common + BungeeCord platform + Adventure |
-
----
-
-## 🎯 Next Steps
-
-After building:
-
-1. **Test locally:**
-   - Copy JAR to server/proxy `plugins/` folder
-   - Start server/proxy
-   - Check logs for successful load
-
-2. **Configure:**
-   - Edit `plugins/MaintenanceUniversal/config.yml`
-   - Set database, Redis, and maintenance options
-   - Reload with `/maintenance reload`
-
-3. **Deploy:**
-   - Upload to production servers
-   - Configure Redis for multi-server sync
-   - Test maintenance mode
+- **[Main README](README.md)** - Overview and features
+- **[Paper Guide](paper/README.md)** - Paper-specific docs
+- **[Velocity Guide](velocity/README.md)** - Velocity-specific docs
+- **[API Documentation](api/README.md)** - Developer API
 
 ---
 
 ## 📧 Support
-
-If you encounter build issues:
 
 - 🐛 [Report Issues](https://github.com/D4vide106/MaintenanceUniversal/issues)
 - 💬 [Discussions](https://github.com/D4vide106/MaintenanceUniversal/discussions)
@@ -366,3 +441,5 @@ If you encounter build issues:
 ---
 
 **Built with ❤️ using Gradle 8 and Java 17**
+
+**Universal JAR = One File, All Platforms! ✨**
