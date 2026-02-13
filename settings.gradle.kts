@@ -17,11 +17,13 @@ include("common")
 // Platform implementations
 include("paper")
 include("velocity")
+include("bungee")
 include("fabric")
 include("forge")
 
 project(":common").projectDir = file("common")
 project(":paper").projectDir = file("paper")
 project(":velocity").projectDir = file("velocity")
+project(":bungee").projectDir = file("bungee")
 project(":fabric").projectDir = file("fabric")
 project(":forge").projectDir = file("forge")

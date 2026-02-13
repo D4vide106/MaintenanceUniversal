@@ -1,122 +1,101 @@
 plugins {
-    java
     `java-library`
-    `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
 }
 
-val modVersion: String by project
-val mavenGroup: String by project
-
 allprojects {
-    group = mavenGroup
-    version = modVersion
+    group = "me.d4vide106"
+    version = "1.0.0"
     
     repositories {
         mavenCentral()
-        
-        // Paper
         maven("https://repo.papermc.io/repository/maven-public/")
-        
-        // PlaceholderAPI
-        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-        
-        // Velocity
-        maven("https://repo.velocitypowered.com/releases/")
-        maven("https://repo.velocitypowered.com/snapshots/")
-        
-        // Fabric
-        maven("https://maven.fabricmc.net/")
-        
-        // Forge
-        maven("https://maven.neoforged.net/releases/")
-        maven("https://maven.minecraftforge.net/")
-        
-        // Other
         maven("https://oss.sonatype.org/content/repositories/snapshots")
-        maven("https://jitpack.io")
     }
 }
 
 subprojects {
-    apply(plugin = "java")
     apply(plugin = "java-library")
     
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(17))
         }
-        withSourcesJar()
-        withJavadocJar()
     }
     
-    tasks {
-        withType<JavaCompile> {
-            options.encoding = "UTF-8"
-            options.release.set(17)
-        }
-        
-        withType<Javadoc> {
-            options.encoding = "UTF-8"
-        }
-        
-        withType<ProcessResources> {
-            filteringCharset = "UTF-8"
-        }
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        options.release.set(17)
     }
 }
 
-// Build all platforms task
+// Task per creare TUTTI i JAR
 tasks.register("buildAll") {
     group = "build"
-    description = "Builds all platform implementations"
+    description = "Builds all platform JARs"
     
     dependsOn(
         ":paper:shadowJar",
         ":velocity:shadowJar",
-        ":fabric:remapJar",
-        ":forge:shadowJar"
+        ":bungee:shadowJar"
     )
     
     doLast {
-        val outputDir = layout.buildDirectory.dir("distributions").get().asFile
-        outputDir.mkdirs()
-        
-        println("┌──────────────────────────────────────────────────────────────────────┐")
-        println("│                                                                      │")
-        println("│           🎉 BUILD SUCCESSFUL - ALL PLATFORMS COMPILED 🎉            │")
-        println("│                                                                      │")
-        println("└──────────────────────────────────────────────────────────────────────┘")
         println("")
-        println("✅ Paper:    ${project(":paper").layout.buildDirectory.get()}/libs/")
-        println("✅ Velocity: ${project(":velocity").layout.buildDirectory.get()}/libs/")
-        println("✅ Fabric:   ${project(":fabric").layout.buildDirectory.get()}/libs/")
-        println("✅ Forge:    ${project(":forge").layout.buildDirectory.get()}/libs/")
+        println("════════════════════════════════════════════════════════════")
+        println("  ✅ Build Complete!")
+        println("════════════════════════════════════════════════════════════")
         println("")
-        println("📦 All builds copied to: ${outputDir.absolutePath}")
+        println("  📐 Server JAR:")
+        println("     paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
+        println("     ✅ Paper + Spigot + Purpur + Folia + CraftBukkit")
         println("")
-        
-        // Copy all jars to distributions folder
-        copy {
-            from(project(":paper").tasks.named("shadowJar"))
-            from(project(":velocity").tasks.named("shadowJar"))
-            from(project(":fabric").tasks.named("remapJar"))
-            from(project(":forge").tasks.named("shadowJar"))
-            into(outputDir)
-        }
+        println("  🌐 Proxy JARs:")
+        println("     velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
+        println("     ✅ Velocity 3.0+")
+        println("")
+        println("     bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
+        println("     ✅ BungeeCord + Waterfall")
+        println("")
+        println("════════════════════════════════════════════════════════════")
     }
 }
 
-// Clean task
+// Task per Server JARs
+tasks.register("buildServer") {
+    group = "build"
+    description = "Builds Server platform JAR (Paper)"
+    dependsOn(":paper:shadowJar")
+    
+    doLast {
+        println("✅ Server JAR ready: paper/build/libs/MaintenanceUniversal-Paper-1.0.0.jar")
+    }
+}
+
+// Task per Proxy JARs
+tasks.register("buildProxy") {
+    group = "build"
+    description = "Builds Proxy platform JARs (Velocity + BungeeCord)"
+    dependsOn(
+        ":velocity:shadowJar",
+        ":bungee:shadowJar"
+    )
+    
+    doLast {
+        println("✅ Velocity JAR: velocity/build/libs/MaintenanceUniversal-Velocity-1.0.0.jar")
+        println("✅ BungeeCord JAR: bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
+    }
+}
+
+// Clean all
 tasks.register("cleanAll") {
     group = "build"
-    description = "Cleans all subproject builds"
+    description = "Cleans all build directories"
     
     dependsOn(
         ":common:clean",
         ":paper:clean",
         ":velocity:clean",
-        ":fabric:clean",
-        ":forge:clean"
+        ":bungee:clean"
     )
 }
