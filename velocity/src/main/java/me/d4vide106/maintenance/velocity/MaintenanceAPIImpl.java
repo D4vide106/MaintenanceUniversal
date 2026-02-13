@@ -1,9 +1,6 @@
 package me.d4vide106.maintenance.velocity;
 
-import me.d4vide106.maintenance.api.MaintenanceAPI;
-import me.d4vide106.maintenance.api.MaintenanceMode;
-import me.d4vide106.maintenance.api.MaintenanceStats;
-import me.d4vide106.maintenance.api.WhitelistedPlayer;
+import me.d4vide106.maintenance.api.*;
 import me.d4vide106.maintenance.config.MaintenanceConfig;
 import me.d4vide106.maintenance.manager.MaintenanceManager;
 import me.d4vide106.maintenance.manager.TimerManager;
@@ -16,9 +13,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Velocity implementation of MaintenanceAPI.
- */
 public class MaintenanceAPIImpl implements MaintenanceAPI {
     
     private final MaintenanceVelocity plugin;
@@ -47,27 +41,30 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     }
     
     @Override
-    @NotNull
-    public MaintenanceMode getMaintenanceMode() {
+    public @NotNull MaintenanceMode getMaintenanceMode() {
         return maintenanceManager.getMode();
     }
     
     @Override
-    @Nullable
-    public String getMaintenanceReason() {
+    public @Nullable String getMaintenanceReason() {
         return maintenanceManager.getReason();
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> enableMaintenance(@NotNull MaintenanceMode mode, @Nullable String reason) {
-        return maintenanceManager.enable(mode, reason);
+    public @NotNull CompletableFuture<Boolean> enableMaintenance(
+        @NotNull MaintenanceMode mode,
+        @Nullable String reason
+    ) {
+        return maintenanceManager.enable(mode, reason)
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> disableMaintenance() {
-        return maintenanceManager.disable();
+    public @NotNull CompletableFuture<Boolean> disableMaintenance() {
+        return maintenanceManager.disable()
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
@@ -76,62 +73,62 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     }
     
     @Override
-    @NotNull
-    public List<WhitelistedPlayer> getWhitelistedPlayers() {
+    public @NotNull List<WhitelistedPlayer> getWhitelistedPlayers() {
         return whitelistManager.getWhitelistedPlayers();
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> addToWhitelist(@NotNull UUID uuid, @NotNull String name, @Nullable String reason) {
-        return whitelistManager.addToWhitelist(uuid, name, reason, "Console");
+    public @NotNull CompletableFuture<Boolean> addToWhitelist(
+        @NotNull UUID uuid,
+        @NotNull String name,
+        @Nullable String reason
+    ) {
+        return whitelistManager.add(uuid, name, reason)
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> removeFromWhitelist(@NotNull UUID uuid) {
-        return whitelistManager.removeFromWhitelist(uuid);
+    public @NotNull CompletableFuture<Boolean> removeFromWhitelist(@NotNull UUID uuid) {
+        return whitelistManager.remove(uuid)
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Void> clearWhitelist() {
+    public @NotNull CompletableFuture<Void> clearWhitelist() {
         return whitelistManager.clearWhitelist();
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> scheduleTimer(@NotNull Duration startDelay, @NotNull Duration duration) {
-        // Timer implementation for Velocity
-        return CompletableFuture.completedFuture(false); // TODO: Implement
+    public @NotNull CompletableFuture<Boolean> scheduleTimer(
+        @NotNull Duration startDelay,
+        @NotNull Duration duration
+    ) {
+        return timerManager.schedule(startDelay, duration)
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<Boolean> cancelTimer() {
-        return timerManager.cancel();
+    public @NotNull CompletableFuture<Boolean> cancelTimer() {
+        return timerManager.cancel()
+            .thenApply(v -> true)
+            .exceptionally(e -> false);
     }
     
     @Override
     public boolean isTimerActive() {
-        return timerManager.isScheduled();
+        return timerManager.isActive();
     }
     
     @Override
-    @NotNull
-    public Duration getRemainingTime() {
-        return timerManager.getRemainingTime().orElse(Duration.ZERO);
+    public @NotNull Duration getRemainingTime() {
+        return timerManager.getRemainingTime();
     }
     
     @Override
-    @NotNull
-    public CompletableFuture<MaintenanceStats> getStats() {
-        return maintenanceManager.getStats();
-    }
-    
-    @Override
-    @NotNull
-    public Duration getCurrentDuration() {
-        return maintenanceManager.getCurrentDuration();
+    public @NotNull CompletableFuture<MaintenanceStats> getStats() {
+        return plugin.getDatabase().getStats();
     }
 }
