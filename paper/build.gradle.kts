@@ -3,20 +3,17 @@ plugins {
     id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
 }
 
-val paperVersion: String by project
-val minecraftVersion: String by project
-
 dependencies {
     // Common module
     implementation(project(":common"))
     
     // Paper API
-    compileOnly("io.papermc.paper:paper-api:$paperVersion")
+    compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
     
-    // ProtocolLib (optional) - Now on Maven Central with new groupId
+    // ProtocolLib (optional)
     compileOnly("net.dmulloy2:ProtocolLib:5.4.0")
     
-    // PlaceholderAPI (optional) - Latest version
+    // PlaceholderAPI (optional)
     compileOnly("me.clip:placeholderapi:2.11.6")
     
     // bStats
@@ -26,9 +23,9 @@ dependencies {
 tasks {
     shadowJar {
         archiveClassifier.set("")
-        archiveFileName.set("MaintenanceUniversal-Paper-${project.version}.jar")
+        archiveBaseName.set("MaintenanceUniversal-Paper")
         
-        // Relocate dependencies to avoid conflicts
+        // Relocate dependencies
         relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.libs.configurate")
         relocate("com.zaxxer.hikari", "me.d4vide106.maintenance.libs.hikari")
         relocate("redis.clients.jedis", "me.d4vide106.maintenance.libs.jedis")
@@ -36,10 +33,8 @@ tasks {
         relocate("com.google.gson", "me.d4vide106.maintenance.libs.gson")
         relocate("org.bstats", "me.d4vide106.maintenance.libs.bstats")
         
-        // Minimize JAR size
         minimize()
         
-        // Exclude unnecessary files
         exclude("META-INF/*.SF")
         exclude("META-INF/*.DSA")
         exclude("META-INF/*.RSA")
@@ -61,13 +56,9 @@ bukkit {
     main = "me.d4vide106.maintenance.paper.MaintenancePaper"
     apiVersion = "1.13"
     
-    // Soft dependencies (optional integrations)
     softDepend = listOf("ProtocolLib", "PlaceholderAPI", "Vault")
-    
-    // Load priority
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
     
-    // Commands
     commands {
         register("maintenance") {
             description = "Main maintenance command"
@@ -77,9 +68,7 @@ bukkit {
         }
     }
     
-    // Permissions
     permissions {
-        // Admin wildcard
         register("maintenance.admin") {
             description = "Grants all maintenance permissions"
             default = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.OP
@@ -95,7 +84,6 @@ bukkit {
             )
         }
         
-        // Individual permissions
         register("maintenance.command") {
             description = "Use maintenance commands"
             default = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.OP

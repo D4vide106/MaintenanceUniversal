@@ -7,38 +7,34 @@ repositories {
 }
 
 dependencies {
-    // BungeeCord API
-    compileOnly("net.md-5:bungeecord-api:1.20-R0.2")
-    
     // Common module
     implementation(project(":common"))
     
-    // Configurate (YAML)
-    implementation("org.spongepowered:configurate-yaml:4.1.2")
+    // BungeeCord API
+    compileOnly("net.md-5:bungeecord-api:1.20-R0.2")
     
-    // Jedis (Redis)
-    implementation("redis.clients:jedis:5.1.0")
-    
-    // Adventure API for BungeeCord
-    implementation("net.kyori:adventure-platform-bungeecord:4.3.2")
+    // bStats
+    implementation("org.bstats:bstats-bungeecord:3.0.2")
 }
 
 tasks {
     shadowJar {
-        archiveBaseName.set("MaintenanceUniversal-BungeeCord")
         archiveClassifier.set("")
+        archiveBaseName.set("MaintenanceUniversal-BungeeCord")
         
         // Relocate dependencies
-        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
-        relocate("redis.clients.jedis", "me.d4vide106.maintenance.lib.jedis")
-        relocate("net.kyori", "me.d4vide106.maintenance.lib.kyori")
-        relocate("com.zaxxer.hikari", "me.d4vide106.maintenance.lib.hikari")
-        
-        dependencies {
-            include(project(":common"))
-        }
+        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.libs.configurate")
+        relocate("com.zaxxer.hikari", "me.d4vide106.maintenance.libs.hikari")
+        relocate("redis.clients.jedis", "me.d4vide106.maintenance.libs.jedis")
+        relocate("net.kyori", "me.d4vide106.maintenance.libs.kyori")
+        relocate("com.google.gson", "me.d4vide106.maintenance.libs.gson")
+        relocate("org.bstats", "me.d4vide106.maintenance.libs.bstats")
         
         minimize()
+        
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
     }
     
     build {
