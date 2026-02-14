@@ -44,8 +44,4 @@ tasks {
         
         finalizedBy("reobfJar")
     }
-    
-    named<Jar>("reobfJar") {
-        archiveBaseName.set("MaintenanceUniversal-Forge")
-    }
 }
