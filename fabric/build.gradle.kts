@@ -50,6 +50,7 @@ tasks {
     }
     
     jar {
+        archiveClassifier.set("dev")
         from("LICENSE") {
             rename { "${it}_${project.base.archivesName.get()}" }
         }
@@ -57,7 +58,7 @@ tasks {
     
     shadowJar {
         archiveBaseName.set("MaintenanceUniversal-Fabric")
-        archiveClassifier.set("")
+        archiveClassifier.set("all")
         
         // Include shadowBundle configuration
         configurations = listOf(project.configurations.getByName("shadowBundle"))
@@ -71,6 +72,11 @@ tasks {
         dependsOn(shadowJar)
         inputFile.set(shadowJar.get().archiveFile)
         archiveBaseName.set("MaintenanceUniversal-Fabric")
+        archiveClassifier.set("")
         addNestedDependencies.set(true)
+    }
+    
+    build {
+        dependsOn(remapJar)
     }
 }
