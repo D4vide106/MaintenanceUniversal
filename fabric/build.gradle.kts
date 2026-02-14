@@ -25,7 +25,7 @@ dependencies {
     implementation("org.spongepowered:configurate-yaml:4.1.2")
     include("org.spongepowered:configurate-yaml:4.1.2")
     
-    // Jedis (Redis) - include to bundle
+    // Jedis (Redis) - include to bundle  
     implementation("redis.clients:jedis:5.1.0")
     include("redis.clients:jedis:5.1.0")
 }
@@ -44,6 +44,7 @@ tasks {
     }
     
     jar {
+        archiveBaseName.set("MaintenanceUniversal-Fabric")
         from("LICENSE") {
             rename { "${it}_${project.base.archivesName.get()}" }
         }
@@ -51,5 +52,6 @@ tasks {
     
     remapJar {
         archiveBaseName.set("MaintenanceUniversal-Fabric")
+        inputFile.set(jar.get().archiveFile)
     }
 }
