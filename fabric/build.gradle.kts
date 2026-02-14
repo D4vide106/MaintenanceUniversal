@@ -1,6 +1,5 @@
 plugins {
     id("fabric-loom") version "1.5-SNAPSHOT"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val minecraftVersion = "1.20.4"
@@ -11,11 +10,6 @@ repositories {
     maven("https://maven.fabricmc.net/")
 }
 
-configurations {
-    // Create shadow configuration for dependencies to include
-    create("shadowBundle")
-}
-
 dependencies {
     // Minecraft and Fabric
     minecraft("com.mojang:minecraft:${minecraftVersion}")
@@ -23,17 +17,17 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
     
-    // Common module - add to both implementation and shadowBundle
+    // Common module - implementation + include to bundle
     implementation(project(":common"))
-    "shadowBundle"(project(":common"))
+    include(project(":common"))
     
-    // Configurate (YAML)
-    include(implementation("org.spongepowered:configurate-yaml:4.1.2")!!)
-    "shadowBundle"("org.spongepowered:configurate-yaml:4.1.2")
+    // Configurate (YAML) - include to bundle
+    implementation("org.spongepowered:configurate-yaml:4.1.2")
+    include("org.spongepowered:configurate-yaml:4.1.2")
     
-    // Jedis (Redis)
-    include(implementation("redis.clients:jedis:5.1.0")!!)
-    "shadowBundle"("redis.clients:jedis:5.1.0")
+    // Jedis (Redis) - include to bundle
+    implementation("redis.clients:jedis:5.1.0")
+    include("redis.clients:jedis:5.1.0")
 }
 
 tasks {
@@ -50,33 +44,12 @@ tasks {
     }
     
     jar {
-        archiveClassifier.set("dev")
         from("LICENSE") {
             rename { "${it}_${project.base.archivesName.get()}" }
         }
     }
     
-    shadowJar {
-        archiveBaseName.set("MaintenanceUniversal-Fabric")
-        archiveClassifier.set("all")
-        
-        // Include shadowBundle configuration
-        configurations = listOf(project.configurations.getByName("shadowBundle"))
-        
-        // Relocate dependencies to avoid conflicts
-        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
-        relocate("redis.clients.jedis", "me.d4vide106.maintenance.lib.jedis")
-    }
-    
     remapJar {
-        dependsOn(shadowJar)
-        inputFile.set(shadowJar.get().archiveFile)
         archiveBaseName.set("MaintenanceUniversal-Fabric")
-        archiveClassifier.set("")
-        addNestedDependencies.set(true)
-    }
-    
-    build {
-        dependsOn(remapJar)
     }
 }
