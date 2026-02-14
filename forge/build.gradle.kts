@@ -36,6 +36,9 @@ tasks {
     jar {
         archiveBaseName.set("MaintenanceUniversal-Forge")
         
+        // Declare explicit dependency on common:jar
+        dependsOn(project(":common").tasks.named("jar"))
+        
         // Include common module classes in jar
         from(project(":common").tasks.named("jar").get().outputs.files.map { zipTree(it) })
         
