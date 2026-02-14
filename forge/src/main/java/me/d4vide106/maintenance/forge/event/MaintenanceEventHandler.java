@@ -4,8 +4,9 @@ import com.mojang.authlib.GameProfile;
 import me.d4vide106.maintenance.forge.MaintenanceForge;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStatusPingEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -23,7 +24,12 @@ public class MaintenanceEventHandler {
             return;
         }
         
-        var player = event.getEntity();
+        // Cast to ServerPlayer
+        if (!(event.getEntity() instanceof ServerPlayer)) {
+            return;
+        }
+        
+        ServerPlayer player = (ServerPlayer) event.getEntity();
         MinecraftServer server = player.getServer();
         
         if (server == null) {
@@ -42,37 +48,11 @@ public class MaintenanceEventHandler {
             return;
         }
         
-        // Kick player
+        // Kick player (use getConnection() method instead of connection field)
         String kickMessage = MaintenanceForge.getInstance().getConfig().getKickMessage();
         player.connection.disconnect(Component.literal(kickMessage));
         
-        // Increment players kicked
-        MaintenanceForge.getInstance().getDatabase().incrementPlayersKicked();
-    }
-    
-    @SubscribeEvent
-    public static void onServerStatusPing(ServerStatusPingEvent event) {
-        var api = MaintenanceForge.getInstance().getApi();
-        var config = MaintenanceForge.getInstance().getConfig();
-        
-        if (api == null || !api.isMaintenanceEnabled()) {
-            return;
-        }
-        
-        if (!config.isCustomMOTDEnabled()) {
-            return;
-        }
-        
-        // Custom MOTD
-        String line1 = config.getMaintenanceMOTDLine1();
-        String line2 = config.getMaintenanceMOTDLine2();
-        String motd = line1 + "\n" + line2;
-        
-        event.setMotd(Component.literal(motd));
-        
-        // Custom max players
-        if (config.isCustomMaxPlayersEnabled()) {
-            event.setMaxPlayers(config.getMaintenanceMaxPlayers());
-        }
+        // Increment players kicked (pass 1 as parameter)
+        MaintenanceForge.getInstance().getDatabase().incrementPlayersKicked(1);
     }
 }
