@@ -82,13 +82,10 @@ public class MaintenanceFabric implements DedicatedServerModInitializer {
                 }
             }
             
-            // Server identification for Redis
-            String serverName = "fabric-server";
-            
             // Initialize managers
-            maintenanceManager = new MaintenanceManager(database);
-            whitelistManager = new WhitelistManager(database, redisManager, serverName);
-            timerManager = new TimerManager(redisManager, serverName);
+            maintenanceManager = new MaintenanceManager();
+            whitelistManager = new WhitelistManager();
+            timerManager = new TimerManager();
             
             // Initialize whitelist cache
             whitelistManager.initialize().join();
