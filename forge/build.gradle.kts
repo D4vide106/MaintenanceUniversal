@@ -22,11 +22,15 @@ dependencies {
     // Common module
     implementation(project(":common"))
     
-    // Configurate (YAML)
-    jarJar(implementation("org.spongepowered:configurate-yaml:4.1.2")!!)
+    // Configurate (YAML) - use Maven version range
+    jarJar(implementation("org.spongepowered:configurate-yaml:[4.1.2,)")!!) {
+        jarJar.ranged(this, "[4.1.2,)")
+    }
     
-    // Jedis (Redis)
-    jarJar(implementation("redis.clients:jedis:5.1.0")!!)
+    // Jedis (Redis) - use Maven version range
+    jarJar(implementation("redis.clients:jedis:[5.1.0,)")!!) {
+        jarJar.ranged(this, "[5.1.0,)")
+    }
 }
 
 tasks {
