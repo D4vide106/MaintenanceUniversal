@@ -58,7 +58,7 @@ bukkit {
     website = "https://github.com/D4vide106/MaintenanceUniversal"
     
     main = "me.d4vide106.maintenance.paper.MaintenancePaper"
-    apiVersion = "1.13"
+    apiVersion = "1.14"
     
     softDepend = listOf("ProtocolLib", "PlaceholderAPI", "Vault")
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
