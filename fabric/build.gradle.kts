@@ -1,5 +1,6 @@
 plugins {
     id("fabric-loom") version "1.5-SNAPSHOT"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val minecraftVersion = "1.20.4"
@@ -10,6 +11,10 @@ repositories {
     maven("https://maven.fabricmc.net/")
 }
 
+configurations {
+    create("bundle")
+}
+
 dependencies {
     // Minecraft and Fabric
     minecraft("com.mojang:minecraft:${minecraftVersion}")
@@ -17,17 +22,17 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
     
-    // Common module - implementation + include to bundle
+    // Common module
     implementation(project(":common"))
-    include(project(":common"))
+    "bundle"(project(":common"))
     
-    // Configurate (YAML) - include to bundle
+    // Configurate (YAML)
     implementation("org.spongepowered:configurate-yaml:4.1.2")
-    include("org.spongepowered:configurate-yaml:4.1.2")
+    "bundle"("org.spongepowered:configurate-yaml:4.1.2")
     
-    // Jedis (Redis) - include to bundle  
+    // Jedis (Redis)
     implementation("redis.clients:jedis:5.1.0")
-    include("redis.clients:jedis:5.1.0")
+    "bundle"("redis.clients:jedis:5.1.0")
 }
 
 tasks {
@@ -43,15 +48,24 @@ tasks {
         options.release.set(17)
     }
     
-    jar {
+    shadowJar {
         archiveBaseName.set("MaintenanceUniversal-Fabric")
-        from("LICENSE") {
-            rename { "${it}_${project.base.archivesName.get()}" }
-        }
+        archiveClassifier.set("dev")
+        
+        configurations = listOf(project.configurations.getByName("bundle"))
+        
+        // Relocate to avoid conflicts
+        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
+        relocate("redis.clients.jedis", "me.d4vide106.maintenance.lib.jedis")
     }
     
     remapJar {
+        dependsOn(shadowJar)
+        inputFile.set(shadowJar.get().archiveFile)
         archiveBaseName.set("MaintenanceUniversal-Fabric")
-        inputFile.set(jar.get().archiveFile)
+    }
+    
+    build {
+        dependsOn(remapJar)
     }
 }
