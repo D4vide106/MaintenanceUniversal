@@ -77,7 +77,7 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     
     @Override
     public @NotNull List<WhitelistedPlayer> getWhitelistedPlayers() {
-        return whitelistManager.getWhitelisted();
+        return whitelistManager.getWhitelistedPlayers();
     }
     
     @Override
@@ -86,14 +86,14 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
         @NotNull String name,
         @Nullable String reason
     ) {
-        return whitelistManager.addPlayer(uuid, name, reason)
+        return whitelistManager.add(uuid, name, reason)
             .thenApply(v -> true)
             .exceptionally(e -> false);
     }
     
     @Override
     public @NotNull CompletableFuture<Boolean> removeFromWhitelist(@NotNull UUID uuid) {
-        return whitelistManager.removePlayer(uuid)
+        return whitelistManager.remove(uuid)
             .thenApply(v -> true)
             .exceptionally(e -> false);
     }
@@ -126,12 +126,14 @@ public class MaintenanceAPIImpl implements MaintenanceAPI {
     }
     
     @Override
-    public @Nullable Duration getRemainingTime() {
+    public @NotNull Duration getRemainingTime() {
         return timerManager.getRemainingTime();
     }
     
     @Override
     public @NotNull CompletableFuture<MaintenanceStats> getStats() {
-        return mod.getDatabase().getStats();
+        // Return dummy stats for now (TODO: implement database)
+        MaintenanceStats stats = new MaintenanceStats(0, Duration.ZERO, 0, 0);
+        return CompletableFuture.completedFuture(stats);
     }
 }
