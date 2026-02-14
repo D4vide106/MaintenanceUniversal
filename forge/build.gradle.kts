@@ -1,6 +1,5 @@
 plugins {
     id("net.minecraftforge.gradle") version "[6.0,6.2)"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val minecraftVersion = "1.20.4"
@@ -19,42 +18,34 @@ dependencies {
     // Forge/NeoForge
     minecraft("net.minecraftforge:forge:${minecraftVersion}-${forgeVersion}")
     
-    // Common module
+    // Common module - regular implementation
     implementation(project(":common"))
     
-    // Configurate (YAML) - use Maven version range
+    // Configurate (YAML) - use jarJar with version range
     jarJar(implementation("org.spongepowered:configurate-yaml:[4.1.2,)")!!) {
         jarJar.ranged(this, "[4.1.2,)")
     }
     
-    // Jedis (Redis) - use Maven version range
+    // Jedis (Redis) - use jarJar with version range
     jarJar(implementation("redis.clients:jedis:[5.1.0,)")!!) {
         jarJar.ranged(this, "[5.1.0,)")
     }
 }
 
 tasks {
-    shadowJar {
-        archiveBaseName.set("MaintenanceUniversal-Forge")
-        archiveClassifier.set("")
-        
-        dependencies {
-            include(project(":common"))
-        }
-        
-        // Relocate dependencies
-        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
-        relocate("redis.clients.jedis", "me.d4vide106.maintenance.lib.jedis")
-        relocate("com.zaxxer.hikari", "me.d4vide106.maintenance.lib.hikari")
-        
-        minimize()
-    }
-    
-    build {
-        dependsOn(shadowJar)
-    }
-    
     jar {
+        archiveBaseName.set("MaintenanceUniversal-Forge")
+        
+        // Include common module classes in jar
+        from(project(":common").tasks.named("jar").get().outputs.files.map { zipTree(it) })
+        
+        // Exclude duplicate META-INF files
+        exclude("META-INF/versions/**")
+        
         finalizedBy("reobfJar")
+    }
+    
+    named<Jar>("reobfJar") {
+        archiveBaseName.set("MaintenanceUniversal-Forge")
     }
 }
