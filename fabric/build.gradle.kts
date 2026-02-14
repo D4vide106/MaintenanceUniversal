@@ -11,6 +11,11 @@ repositories {
     maven("https://maven.fabricmc.net/")
 }
 
+configurations {
+    // Create shadow configuration for dependencies to include
+    create("shadowBundle")
+}
+
 dependencies {
     // Minecraft and Fabric
     minecraft("com.mojang:minecraft:${minecraftVersion}")
@@ -18,17 +23,17 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
     
-    // Common module
+    // Common module - add to both implementation and shadowBundle
     implementation(project(":common"))
+    "shadowBundle"(project(":common"))
     
     // Configurate (YAML)
     include(implementation("org.spongepowered:configurate-yaml:4.1.2")!!)
+    "shadowBundle"("org.spongepowered:configurate-yaml:4.1.2")
     
     // Jedis (Redis)
     include(implementation("redis.clients:jedis:5.1.0")!!)
-    
-    // Include common module
-    include(project(":common"))
+    "shadowBundle"("redis.clients:jedis:5.1.0")
 }
 
 tasks {
@@ -53,12 +58,19 @@ tasks {
     shadowJar {
         archiveBaseName.set("MaintenanceUniversal-Fabric")
         archiveClassifier.set("")
-        configurations = listOf(project.configurations.shadow.get())
+        
+        // Include shadowBundle configuration
+        configurations = listOf(project.configurations.getByName("shadowBundle"))
+        
+        // Relocate dependencies to avoid conflicts
+        relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
+        relocate("redis.clients.jedis", "me.d4vide106.maintenance.lib.jedis")
     }
     
     remapJar {
         dependsOn(shadowJar)
         inputFile.set(shadowJar.get().archiveFile)
         archiveBaseName.set("MaintenanceUniversal-Fabric")
+        addNestedDependencies.set(true)
     }
 }
