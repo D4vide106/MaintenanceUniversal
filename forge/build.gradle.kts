@@ -47,4 +47,9 @@ tasks {
         
         finalizedBy("reobfJar")
     }
+    
+    // Make sure jarJar task output is used in build
+    named("build") {
+        dependsOn("jarJar")
+    }
 }
