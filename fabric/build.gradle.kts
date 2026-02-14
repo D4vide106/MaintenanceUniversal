@@ -12,7 +12,9 @@ repositories {
 }
 
 configurations {
-    create("bundle")
+    create("shadowCommon")
+    compileClasspath.get().extendsFrom(configurations["shadowCommon"])
+    runtimeClasspath.get().extendsFrom(configurations["shadowCommon"])
 }
 
 dependencies {
@@ -24,15 +26,15 @@ dependencies {
     
     // Common module
     implementation(project(":common"))
-    "bundle"(project(":common"))
+    "shadowCommon"(project(":common"))
     
     // Configurate (YAML)
     implementation("org.spongepowered:configurate-yaml:4.1.2")
-    "bundle"("org.spongepowered:configurate-yaml:4.1.2")
+    "shadowCommon"("org.spongepowered:configurate-yaml:4.1.2")
     
     // Jedis (Redis)
     implementation("redis.clients:jedis:5.1.0")
-    "bundle"("redis.clients:jedis:5.1.0")
+    "shadowCommon"("redis.clients:jedis:5.1.0")
 }
 
 tasks {
@@ -49,10 +51,8 @@ tasks {
     }
     
     shadowJar {
-        archiveBaseName.set("MaintenanceUniversal-Fabric")
-        archiveClassifier.set("dev")
-        
-        configurations = listOf(project.configurations.getByName("bundle"))
+        configurations = listOf(project.configurations["shadowCommon"])
+        archiveClassifier.set("dev-shadow")
         
         // Relocate to avoid conflicts
         relocate("org.spongepowered.configurate", "me.d4vide106.maintenance.lib.configurate")
