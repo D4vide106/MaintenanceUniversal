@@ -11,6 +11,9 @@ allprojects {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://oss.sonatype.org/content/repositories/snapshots")
+        maven("https://maven.fabricmc.net/")
+        maven("https://maven.minecraftforge.net/")
+        maven("https://maven.neoforged.net/releases/")
     }
 }
 
@@ -34,12 +37,14 @@ subprojects {
 // ============================================
 tasks.register("buildAll") {
     group = "build"
-    description = "Builds ALL plugin JARs (Paper + Velocity + BungeeCord)"
+    description = "Builds ALL plugin JARs (Paper + Velocity + BungeeCord + Fabric + Forge)"
     
     dependsOn(
         ":paper:shadowJar",
         ":velocity:shadowJar",
-        ":bungee:shadowJar"
+        ":bungee:shadowJar",
+        ":fabric:remapJar",
+        ":forge:shadowJar"
     )
     
     doLast {
@@ -60,8 +65,16 @@ tasks.register("buildAll") {
         println("     bungee/build/libs/MaintenanceUniversal-BungeeCord-1.0.0.jar")
         println("     ✅ BungeeCord, Waterfall")
         println("")
+        println("  🧩 Fabric JAR (Mod):")
+        println("     fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+        println("     ✅ Fabric, Quilt")
+        println("")
+        println("  🔨 Forge JAR (Mod):")
+        println("     forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+        println("     ✅ Forge, NeoForge")
+        println("")
         println("════════════════════════════════════════════════════════════")
-        println("  💡 3 JARs = Full plugin + proxy coverage!")
+        println("  💡 5 JARs = Full coverage (plugins + mods)!")
         println("════════════════════════════════════════════════════════════")
         println("")
     }
@@ -98,6 +111,23 @@ tasks.register("buildProxy") {
 }
 
 // ============================================
+// TASK: buildMods - Mod loader JARs only
+// ============================================
+tasks.register("buildMods") {
+    group = "build"
+    description = "Builds Mod loader JARs (Fabric + Forge)"
+    dependsOn(
+        ":fabric:remapJar",
+        ":forge:shadowJar"
+    )
+    
+    doLast {
+        println("✅ Fabric JAR: fabric/build/libs/MaintenanceUniversal-Fabric-1.0.0.jar")
+        println("✅ Forge JAR: forge/build/libs/MaintenanceUniversal-Forge-1.0.0.jar")
+    }
+}
+
+// ============================================
 // TASK: cleanAll - Clean all modules
 // ============================================
 tasks.register("cleanAll") {
@@ -108,6 +138,8 @@ tasks.register("cleanAll") {
         ":common:clean",
         ":paper:clean",
         ":velocity:clean",
-        ":bungee:clean"
+        ":bungee:clean",
+        ":fabric:clean",
+        ":forge:clean"
     )
 }
