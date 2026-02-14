@@ -92,13 +92,10 @@ public class MaintenanceForge {
                 }
             }
             
-            // Server identification for Redis
-            String serverName = "forge-server";
-            
-            // Initialize managers
-            maintenanceManager = new MaintenanceManager(database);
-            whitelistManager = new WhitelistManager(database, redisManager, serverName);
-            timerManager = new TimerManager(redisManager, serverName);
+            // Initialize managers with no-arg constructors
+            maintenanceManager = new MaintenanceManager();
+            whitelistManager = new WhitelistManager();
+            timerManager = new TimerManager();
             
             // Initialize whitelist cache
             whitelistManager.initialize().join();
